@@ -57,7 +57,7 @@ export default async function Page() {
 
   return (
     <div className='m-12 ml-32 flex flex-col gap-8'>
-      <div className='bg-white outline-[#ADD3EA] outline-4 p-4 rounded-2xl'>
+      <div className='bg-white outline-[#ADD3EA] outline-4 p-4 rounded-2xl w-fit'>
         <h2 className='font-delius text-2xl'>EXP Points: {expPoints}</h2>
       </div>
       
