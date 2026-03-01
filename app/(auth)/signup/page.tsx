@@ -2,6 +2,7 @@
 import { createClient } from '@/utils/supabase/client';
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link';
 
 export default function Signup() {
     const [email, setEmail] = useState('');
@@ -94,7 +95,7 @@ export default function Signup() {
                 {/* buttons */}
                 <div className="flex p-4 gap-20">
                     <button type="submit" className="font-delius rounded-xl bg-[#ADD3EA] px-15 py-2 text-sm font-semibold text-[#524601] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500">Sign Up</button>
-                    <button type="button" className="font-delius rounded-xl text-sm/6 bg-[#F0B6CF] px-15 py-2 font-semibold text-[#524601]">Log In</button>
+                    <Link href="/login" className="font-delius rounded-xl text-sm/6 bg-[#F0B6CF] px-15 py-2 font-semibold text-[#524601]">Log In</Link>
                 </div>
             </form>
         </div>
