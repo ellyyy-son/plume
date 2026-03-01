@@ -72,6 +72,8 @@ export default function Page() {
                 <input
                     type="password"
                     placeholder="Password"
+                    pattern="^(?=*.[0-9])(?=*.[@$?])[a-zA-z0-9@$?]{6,20}$"
+                    title="Phone number must be in the format 123-456-7890"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
