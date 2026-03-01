@@ -8,15 +8,16 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-cherry: var(--font-cherry);
+  --font-delius: var(--font-delius);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #F0B6CF;
-    --foreground: #2E2805;
-  }
+.font-cherry {
+  font-family: var(--font-cherry);
+}
+
+.font-delius {
+  font-family: var(--font-delius);
 }
 
 body {

@@ -1,9 +1,10 @@
+import Link from 'next/link'
 import { createClient } from '@/utils/supabase/server'
 import { cookies } from 'next/headers'
-import Link from 'next/link'
+import './globals.css'
 
-export default async function Home() {
-  return (
-    <div><u><Link href="/login">Signup</Link></u></div>
-  )
+<Link href="/tasks">Go to Tasks</Link>
+
+export default function Page() {
+  return <div><u><Link href="/tasks">Go to Tasks</Link></u></div>
 }
