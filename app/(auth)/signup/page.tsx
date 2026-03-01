@@ -1,11 +1,15 @@
 "use client"
 import { createClient } from '@/utils/supabase/client';
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 export default function Page() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [name, setName] = useState('');
+    const [username, setUsername] = useState('');
     const supabase = createClient();
+    const router = useRouter();
 
     async function signUpNewUser() {
         const { data, error } = await supabase.auth.signUp({
@@ -16,13 +20,26 @@ export default function Page() {
             },
         });
 
-
         if (error) {
             console.error('Sign up error:', error.message);
             return;
         }
 
-        console.log('User signed up:', data.user);
+        if (data.user) {
+            // only create a profile if user successfully signed up
+            const { error: profileError } = await supabase.from('profile').insert({
+                user_id: data.user.id,
+                username: username,
+                name: name,
+            });
+
+            if (profileError) {
+                console.error('Profile creation error:', profileError.message);
+                return;
+            }
+            router.push('/confirm');
+            console.log('User signed up and profile created:', data.user.id);
+        }
     }
 
     return (
@@ -31,6 +48,20 @@ export default function Page() {
                 e.preventDefault();
                 signUpNewUser();
             }}>
+                <input
+                    type="text"
+                    placeholder="Name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                />
+                <input
+                    type="text"
+                    placeholder="Username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    required
+                />
                 <input
                     type="email"
                     placeholder="Email"
