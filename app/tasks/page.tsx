@@ -134,7 +134,7 @@ export default async function Page({
             </div>
           ) : (
             <div className='flex flex-col bg-[#FBF5D1] font-delius p-10 rounded-b-2xl w-full'>
-              <p>No pending tasks</p>
+              <p>No tasks available</p>
             </div>
           )}
         </div>
