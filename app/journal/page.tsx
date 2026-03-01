@@ -47,7 +47,7 @@ export default async function Page() {
           placeholder="Start writing..."
           className="
             block w-[80%] mx-[10%] mt-[5%]
-            min-h-[60vh] p-3
+            min-h-110 p-3
             border-2 border-[#ccc] rounded
             bg-[#f8f8f8]
             text-base
