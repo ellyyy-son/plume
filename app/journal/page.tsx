@@ -11,7 +11,7 @@ export default async function Page() {
       <main className="min-h-screen bg-[#F0B6CF]">
 
       {/* Header */}
-      <header className="bg-[#FBF5D1] px-8 py-10">
+      <header className="w-screen bg-[#FBF5D1] px-8 py-10">
         <h1
           className="text-center text-[#163F55] text-4xl font-normal"
           style={{ fontFamily: '"Cherry Bomb One", system-ui' }}
