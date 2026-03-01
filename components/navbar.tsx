@@ -7,7 +7,7 @@ import { useState } from 'react';
 export default function Navbar() {
   return (
     <>
-      <div className="w-[15%]">
+      <div className="w-[15%] top-0 sticky h-screen">
         <FullNav />
       </div>
     </>
@@ -23,7 +23,7 @@ function FullNav() {
   return (
     <div className="flex flex-col h-screen bg-[#F7F9FC] shadow-sm border-r-12 border-r-[#ADD3EA] pt-8 pb-8 gap-12">
         <div className="flex flex-col items-center font-delius gap-4">
-            <Image src='/chiikawa.jpg' width={120} height={120} className="rounded-full border-4 border-[#4F84A5]"/>
+            <Image src='/chiikawa.jpg' width={120} height={120} alt='Profile Picture' className="rounded-full border-4 border-[#4F84A5]"/>
             <p className="text-lg font-bold">username</p>
             <p className="text-sm">edit profile</p>
         </div>
