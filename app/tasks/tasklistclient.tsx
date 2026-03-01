@@ -3,6 +3,12 @@
 import { createClient } from "@/utils/supabase/client"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import EditTaskButton from "./edittaskbutton"
+
+type Difficulty = {
+  difficulty_name: string
+  difficulty_expamount: number
+}
 
 type Task = {
   id: number
@@ -48,11 +54,13 @@ function getDeadlineMessage(dateString: string) {
 type TaskListClientProps = {
   tasks: Task[]
   mode: "pending" | "completed"
+  difficulties: Difficulty[]
 }
 
 export default function TaskListClient({
   tasks,
   mode,
+  difficulties
 }: TaskListClientProps) {
   const supabase = createClient()
   const router = useRouter()
@@ -76,6 +84,7 @@ export default function TaskListClient({
         <li key={task.id}>
             <strong style={{ marginRight: "48px" }}>{task.task_title}</strong>
             {" "}Difficulty: {task.task_difficulty}
+            {" "}<EditTaskButton task={task} difficulties={difficulties} />
             <p>{task.task_details}</p>
 
             {mode === "pending" && task.task_deadline && (
@@ -98,56 +107,3 @@ export default function TaskListClient({
     </ul>
     )
 }
-
-
-
-// export default function TaskListClient({
-//   pendingTasks,
-// }: {
-//   pendingTasks: Task[]
-// }) {
-//   const supabase = createClient()
-//   const router = useRouter()
-
-//     async function updateTaskStatus(id: number, isComplete: boolean) {
-//     const { error } = await supabase
-//         .from("task")
-//         .update({
-//         is_complete: isComplete,
-//         completion_datetime: isComplete ? new Date().toISOString() : null,
-//         })
-//         .eq("id", id)
-
-//     if (error) { /* set error state */ return }
-//     router.refresh()
-//     }
-
-
-//   return (
-//     <ul>
-//       {pendingTasks.map((task) => (
-//         <li key={task.id}>
-//         <strong style={{ marginRight: "48px" }}>{task.task_title}</strong>
-//         {" "}Difficulty: {task.task_difficulty}
-
-//         <p>{task.task_details}</p>
-//         {task.task_deadline && (
-//             <div>
-//             <p>Due: {formatDate(task.task_deadline)}</p>
-//             {getDeadlineMessage(task.task_deadline)}
-//             </div>
-//         )}
-//         <p>
-//             <button
-//               onClick={() => updateTaskStatus(task.id, true)}
-//             >
-//               Mark as Completed
-//             </button>
-//         </p>
-//         <p>{String(task.is_complete)}</p>
-//         <br />
-//         </li>
-//     ))}
-//     </ul>
-//   )
-// }
