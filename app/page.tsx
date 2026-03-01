@@ -1,7 +1,9 @@
+import { createClient } from '@/utils/supabase/server'
+import { cookies } from 'next/headers'
 import Link from 'next/link'
 
-{/* <Link href="/login">Go to Tasks</Link> */}
-
-export default function Home() {
-  return <div><u><Link href="/login">Register</Link></u></div>
+export default async function Home() {
+  return (
+    <div><u><Link href="/login">Signup</Link></u></div>
+  )
 }
