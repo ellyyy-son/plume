@@ -57,8 +57,7 @@ export default async function Page({
 }: { 
   searchParams: Promise<{ filter?: string }>
 }) {
-  const cookieStore = await cookies()
-  const supabase = createClient(cookieStore)
+  const supabase = await createClient(); 
   const { filter } = await searchParams
 
   const { data: allTasks } = await supabase.from('task').select('*')

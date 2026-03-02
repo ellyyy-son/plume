@@ -21,9 +21,9 @@ export default function Login() {
 
 
         if (error) {
-            console.error('Sign in error:', error.message);
-            return;
-        }
+  console.error("SUPABASE ERROR:", error)
+  throw new Error(error.message)
+}
         router.push('/');
         console.log('User signed in:', data.user);
     }

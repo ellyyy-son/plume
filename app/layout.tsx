@@ -30,8 +30,13 @@ export default function RootLayout({
       <body
         className={`${cherry.variable} ${delius.variable} flex flex-row antialiased`}
       >
-        <Navbar />
-        {children}
+        <div className="w-[15%] shrink-0">
+          <Navbar />
+        </div>
+
+        <main className="flex-1">
+          {children}
+        </main>
       </body>
     </html>
   );
