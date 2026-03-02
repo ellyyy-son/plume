@@ -26,12 +26,6 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${cherry.variable} ${delius.variable} flex flex-row antialiased`}
-      >
-        {children}
-      </body>
-    </html>
+      <main> {children} </main> 
   );
 }

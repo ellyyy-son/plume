@@ -21,10 +21,6 @@ const delius = Delius_Unicase({
 
 export default function SignupLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-    <body className={`${cherry.variable} ${delius.variable} flex flex-row antialiased`}>
       <main>{children}</main>
-    </body>
-    </html>
   );
 }
