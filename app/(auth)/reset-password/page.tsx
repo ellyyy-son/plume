@@ -28,7 +28,6 @@ export default function Reset_Password() {
                 console.error('Sign up error:', error.message);
                 return;
             }
-            console.log('Successfully changed password to ' + data.password);
             router.push('/');
         }
     }
