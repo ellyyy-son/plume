@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Cherry_Bomb_One,  Delius_Unicase} from "next/font/google";
+import { Cherry_Bomb_One, Delius_Unicase } from "next/font/google";
 
 
 export const metadata: Metadata = {
@@ -19,12 +19,14 @@ const delius = Delius_Unicase({
 });
 
 
-export default function SignupLayout({ children }: { children: React.ReactNode }) {
+export default function SignupLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
-    <html lang="en">
-    <body className={`${cherry.variable} ${delius.variable} flex flex-row antialiased`}>
-      <main>{children}</main>
-    </body>
-    </html>
+    <div className={`${cherry.variable} ${delius.variable} flex flex-row antialiased`}>
+      <div>{children}</div>
+    </div>
   );
 }
