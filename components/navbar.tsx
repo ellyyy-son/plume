@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { createClient } from "@/utils/supabase/client";
 
 export default function Navbar() {
   return (
@@ -18,7 +20,38 @@ import { usePathname } from "next/navigation";
 
 /// FullNav
 function FullNav() {
+  const router = useRouter();
   const pathname = usePathname();
+  const [isUser, setIsUser] = useState(false);
+  const supabase = createClient();
+
+  async function checkUser() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      console.log('No user logged in.');
+      return;
+    }
+    const boolUser = user ? true : false;
+    setIsUser(boolUser)
+  }
+
+  useEffect(() => {
+    checkUser();
+  })
+
+  async function signOut() {
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      console.error('Sign out error:', error.message);
+      return;
+    }
+    setIsUser(false);
+    router.push('/');
+    console.log('Successfully signed out')
+  }
+
+
 
   return (
     <div className="flex flex-col h-screen bg-[#F7F9FC] shadow-sm border-r-12 border-r-[#ADD3EA] pt-8 pb-8 gap-12">

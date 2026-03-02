@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Cherry_Bomb_One,  Delius_Unicase} from "next/font/google";
+import { Cherry_Bomb_One, Delius_Unicase } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/navbar";
 

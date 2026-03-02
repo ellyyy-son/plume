@@ -1,7 +1,7 @@
 "use client"
 import { createClient } from '@/utils/supabase/client';
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, redirect } from 'next/navigation'
 import Link from 'next/link';
 
 export default function Login() {
@@ -16,9 +16,7 @@ export default function Login() {
         const { data, error } = await supabase.auth.signInWithPassword({
             email: email,
             password: password,
-            options: {
-                emailRedirectTo: `${window.location.origin}/confirm`,
-            },
+
         });
 
 
@@ -67,6 +65,7 @@ export default function Login() {
                 <div className="grid grid-rows-2 p-4 gap-2.5">
                     <button type="submit" className="font-delius rounded-2xl bg-[#ADD3EA] px-23 py-2 text-sm font-semibold text-[#524601]">Login</button>
                     <Link href="/signup" className="font-delius rounded-2xl text-sm/6 bg-[#F0B6CF] px-23 py-2 font-semibold text-[#524601]">Create Account</Link>
+                    <Link href="/forgot-password" className="font-delius rounded-2xl text-sm/6 bg-[#F0B6CF] px-23 py-2 font-semibold text-[#524601]">Forgot Password</Link>
                 </div>
             </form>
         </div>
