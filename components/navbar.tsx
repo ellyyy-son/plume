@@ -16,22 +16,49 @@ function FullNav() {
   const supabase = createClient();
   const [isUser, setIsUser] = useState<boolean>(false);
   const [isReady, setIsReady] = useState(false);
+  const [username, setUsername] = useState("");
 
   useEffect(() => {
     let mounted = true;
 
+    const loadProfileUsername = async (user: { id: string; user_metadata?: Record<string, unknown> } | null) => {
+      if (!user) {
+        setUsername("");
+        return;
+      }
+
+      const { data: profileData, error } = await supabase
+        .from("profile")
+        .select("username")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (error) {
+        console.error("PROFILE LOOKUP ERROR:", error.message);
+      }
+
+      const fallbackUsername =
+        typeof user.user_metadata?.username === "string"
+          ? user.user_metadata.username.trim()
+          : "";
+
+      setUsername(profileData?.username || fallbackUsername || "");
+    };
+
     const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { user } } = await supabase.auth.getUser();
       if (!mounted) return;
-      setIsUser(!!session?.user);
+      setIsUser(!!user);
+      await loadProfileUsername(user as { id: string; user_metadata?: Record<string, unknown> } | null);
       setIsReady(true);
     };
 
     checkUser();
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (!mounted) return;
       setIsUser(!!session?.user);
+      await loadProfileUsername(session?.user as { id: string; user_metadata?: Record<string, unknown> } | null);
       setIsReady(true);
     });
 
@@ -69,7 +96,7 @@ function FullNav() {
       <div className="flex flex-col h-screen bg-[#F7F9FC] shadow-sm border-r-12 border-r-[#ADD3EA] pt-8 pb-8 gap-12">
       <div className="flex flex-col items-center font-delius gap-4">
           <Image src='/chiikawa.jpg' width={120} height={120} alt='Profile Picture' className="rounded-full border-4 border-[#4F84A5]"/>
-          {isUser && <p className="text-lg font-bold">username</p>}
+          {isUser && <p className="text-lg font-bold">{username || "user"}</p>}
           {isUser && <Link href="/profile/edit"><p className="text-sm">edit profile</p></Link>}
       </div>
       <nav className="flex flex-col items-center w-full gap-4 font-delius">
