@@ -1,9 +1,11 @@
-"use client"
+'use client'
 import { createClient } from '@/utils/supabase/client';
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { fetchUser } from './profile';
 import Link from 'next/link';
+
+const usernamePattern = /^[A-Za-z0-9_]+$/;
 
 export default function EditProfile() {
     const [name, setName] = useState('');
@@ -27,8 +29,22 @@ export default function EditProfile() {
     }, []);
 
     async function editProfile() {
+        const trimmedName = name.trim();
+        const trimmedUsername = username.trim();
+        const trimmedEmail = email.trim();
+
+        if (!trimmedName || !trimmedUsername || !trimmedEmail) {
+            alert('Name, username, and email are required.');
+            return;
+        }
+
+        if (!usernamePattern.test(trimmedUsername)) {
+            alert('Username can only contain letters, numbers, and underscores.');
+            return;
+        }
+
         const { data, error } = await supabase.auth.updateUser({
-            email: email,
+            email: trimmedEmail,
         });
 
 
@@ -41,8 +57,8 @@ export default function EditProfile() {
             const { error: profileError } = await supabase
                 .from('profile')
                 .update({
-                    username: username,
-                    name: name,
+                    username: trimmedUsername,
+                    name: trimmedName,
                 })
                 .eq('user_id', userId);
 
@@ -65,7 +81,7 @@ export default function EditProfile() {
             }}>
                 <div className="mt-4 gap-x-3 justify-items-center">
                     <svg viewBox="0 0 24 24" fill="currentColor" data-slot="icon" aria-hidden="true" className="size-30 text-gray-500">
-                        <path d="M18.685 19.097A9.723 9.723 0 0 0 21.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12a9.723 9.723 0 0 0 3.065 7.097A9.716 9.716 0 0 0 12 21.75a9.716 9.716 0 0 0 6.685-2.653Zm-12.54-1.285A7.486 7.486 0 0 1 12 15a7.486 7.486 0 0 1 5.855 2.812A8.224 8.224 0 0 1 12 20.25a8.224 8.224 0 0 1-5.855-2.438ZM15.75 9a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" clip-rule="evenodd" fill-rule="evenodd" />
+                        <path d="M18.685 19.097A9.723 9.723 0 0 0 21.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12a9.723 9.723 0 0 0 3.065 7.097A9.716 9.716 0 0 0 12 21.75a9.716 9.716 0 0 0 6.685-2.653Zm-12.54-1.285A7.486 7.486 0 0 1 12 15a7.486 7.486 0 0 1 5.855 2.812A8.224 8.224 0 0 1 12 20.25a8.224 8.224 0 0 1-5.855-2.438ZM15.75 9a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" clipRule="evenodd" fillRule="evenodd" />
                     </svg>
                     <button type="button" className="font-delius rounded-md bg-white/10 px-3 py-2 text-sm font-semibold text-[#2E2805] inset-ring inset-ring-white/5 hover:bg-[#ADD3EA]/50">Edit photo</button>
                 </div>
