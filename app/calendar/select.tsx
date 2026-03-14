@@ -43,7 +43,10 @@ export default function CustomSelect({ value, options, onChange, className }: Cu
             {/* Dropdown */}
             {open && (
                 <ul className="absolute top-full mt-1 left-0 w-full bg-white rounded-lg 
-          shadow-lg z-50 max-h-52 overflow-y-auto py-1">
+          shadow-lg z-50 max-h-52 overflow-y-auto [&::-webkit-scrollbar]:w-2
+            [&::-webkit-scrollbar-track]:bg-transparent
+            [&::-webkit-scrollbar-thumb]:bg-gray-300
+            [&::-webkit-scrollbar-thumb]:hover:bg-gray-400 py-1">
                     {options.map(opt => (
                         <li
                             key={opt}
