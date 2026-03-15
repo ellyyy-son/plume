@@ -102,21 +102,23 @@ export default async function Page({
       <div className='bg-white outline-[#ADD3EA] outline-4 p-4 rounded-2xl w-fit'>
         <h2 className='font-delius text-2xl'>EXP Points: {expPoints}</h2>
       </div>
-
-      <div className='flex flex-col gap-8'>
-        <AddTaskButton difficulties={difficulties ?? []} />
-      </div>
-
       
       <div className='flex flex-col gap-8'>
-        <FilterButtons currentFilter={filter} />
+        <FilterButtons currentFilter={filter}/>
 
-        <div className='flex flex-col items-center justify-center bg-[#CCC38D] rounded-2xl w-full'>
+        <div className='flex flex-col items-center justify-center bg-[#D7CFA7] rounded-2xl w-full z-2'>
           <p className='font-cherry text-5xl text-center p-12'>
             {filter === 'daily' ? "Today's Tasks" : filter === 'week' ? "This Week's Tasks" : "All Tasks"}
           </p>
+        
+        <div className="grid grid-template-rows-2 w-full bg-[#FBF5D1] border-[#CCC38D] border-x-4 border-b-4 rounded-b-2xl">
+          <div className='justify-self-end flex flex-col w-40 mt-4 mr-12'>
+            <AddTaskButton difficulties={difficulties ?? []}/>
+          </div>
+
           {tasks && tasks.length > 0 ? (
-            <div className='flex flex-col bg-[#FBF5D1] font-delius p-8 rounded-b-2xl w-full'>
+            <div className='flex flex-col font-delius px-10 pb-5'>
+              
               {filter !== 'complete' && (
                 <div>
                 <h2>Pending Tasks</h2>
@@ -136,6 +138,7 @@ export default async function Page({
               <p>No tasks available</p>
             </div>
           )}
+        </div>
         </div>
       </div>
     </div>
