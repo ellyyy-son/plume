@@ -48,6 +48,12 @@ export default function EditTaskButton({ task, difficulties }: EditTaskButtonPro
     setErrorMsg("")
 
     const deadline = `${deadlineDate}T${deadlineTime}`
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+    if (userError || !user) {
+      setErrorMsg("Unable to edit task. Please sign in again.")
+      return
+    }
 
 
     const { error } = await supabase.from("task").update({
@@ -55,7 +61,7 @@ export default function EditTaskButton({ task, difficulties }: EditTaskButtonPro
       task_details: details,
       task_difficulty: difficulty,
       task_deadline: deadline || null,
-    }).eq("id", task.id)
+    }).eq("id", task.id).eq("user_id", user.id)
 
     if (error) {
       setErrorMsg("Failed to add task: " + error.message)
