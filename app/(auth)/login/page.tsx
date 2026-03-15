@@ -63,7 +63,7 @@ export default function Login() {
                 <div className="grid grid-rows-2 w-1/1 py-4 px-3">
                     <label htmlFor="password" className="self-center block font-delius text-xl/6 font-bold text-[#2E2805] basis-1/3">Password</label>
                     <div className="rounded-t-md bg-white wopacity-70 px-3 py-1 border-b-3 border-[#CCC38D] focus-within:border-[#F0B6CF]">
-                        <input id="password" type="password" name="password" placeholder="type your password"
+                        <input id="password" type="password" name="password" 
                             placeholder="Password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
