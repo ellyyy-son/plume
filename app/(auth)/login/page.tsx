@@ -1,7 +1,8 @@
 "use client"
 import { createClient } from '@/utils/supabase/client';
+import { ensureProfileRecord } from '@/utils/supabase/ensure-profile';
 import { useState } from 'react'
-import { useRouter, redirect } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link';
 
 export default function Login() {
@@ -22,9 +23,20 @@ export default function Login() {
 
         if (error) {
   console.error("SUPABASE ERROR:", error)
-  throw new Error(error.message)
+  alert(error.message)
+  return
 }
-        router.push('/');
+
+        if (data.user) {
+            const profileResult = await ensureProfileRecord(supabase, data.user, {
+                accessToken: data.session?.access_token,
+            })
+            if (!profileResult.ok) {
+                console.error("Profile check error:", profileResult.error)
+            }
+        }
+        router.refresh();
+        router.replace('/');
         console.log('User signed in:', data.user);
     }
 

@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link';
 
+const usernamePattern = /^[A-Za-z0-9_]+$/;
+
 export default function Signup() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -13,33 +15,96 @@ export default function Signup() {
     const router = useRouter();
 
     async function signUpNewUser() {
+        const selectedUsername = username.trim();
+        const selectedName = name.trim();
+        const selectedEmail = email.trim();
+        const selectedPassword = password.trim();
+        const selectedEmailLower = selectedEmail.toLowerCase();
+
+        if (!selectedUsername) {
+            alert('Username is required.');
+            return;
+        }
+
+        if (!usernamePattern.test(selectedUsername)) {
+            alert('Username can only contain letters, numbers, and underscores.');
+            return;
+        }
+
+        if (!selectedName) {
+            alert('Name is required.');
+            return;
+        }
+
+        if (!selectedEmail) {
+            alert('Email is required.');
+            return;
+        }
+
+        if (!selectedPassword) {
+            alert('Password is required.');
+            return;
+        }
+
+        const usernameCheckResponse = await fetch(
+            `/api/profile/check?username=${encodeURIComponent(selectedUsername)}&email=${encodeURIComponent(selectedEmailLower)}`
+        );
+        const usernamePayload = await usernameCheckResponse.json().catch(() => null);
+
+        if (!usernameCheckResponse.ok || !usernamePayload?.ok) {
+            const reason = usernamePayload?.error || "Unable to verify username or email right now.";
+            console.warn('Could not verify username/email availability:', reason);
+            alert(`Signup check failed. ${reason}`);
+            return;
+        }
+
+        if (usernamePayload.emailTaken) {
+            alert('An account with this email already exists. Please use another email.');
+            return;
+        }
+
+        if (usernamePayload.usernameTaken) {
+            alert('Username is already taken. Please choose another one.');
+            return;
+        }
+
         const { data, error } = await supabase.auth.signUp({
-            email: email,
-            password: password,
+            email: selectedEmail,
+            password: selectedPassword,
             options: {
                 emailRedirectTo: `${window.location.origin}/confirm`,
+                data: {
+                    name: selectedName,
+                    username: selectedUsername,
+                },
             },
         });
 
         if (error) {
             console.error('Sign up error:', error.message);
+            if (
+                error.message.toLowerCase().includes("username") ||
+                error.message.toLowerCase().includes("email") ||
+                error.message.toLowerCase().includes("duplicate") ||
+                error.message.toLowerCase().includes("already registered") ||
+                error.code === '23505'
+            ) {
+                if (error.message.toLowerCase().includes("email")) {
+                    alert('An account with this email already exists. Please use another email.');
+                } else {
+                    alert('Username is already taken. Please choose another one.');
+                }
+            } else {
+                alert(error.message);
+            }
             return;
         }
 
         if (data.user) {
-            // only create a profile if user successfully signed up
-            const { error: profileError } = await supabase.from('profile').insert({
-                user_id: data.user.id,
-                username: username,
-                name: name,
-            });
-
-            if (profileError) {
-                console.error('Profile creation error:', profileError.message);
-                return;
-            }
-            router.push('/confirm');
-            console.log('User signed up and profile created:', data.user.id);
+            console.log("Signed up user id:", data.user.id);
+            console.log("Signed up user metadata:", data.user.user_metadata);
+            router.push('/signup/email-sent');
+            console.log('Signup initiated for user:', data.user.id);
         }
     }
 
@@ -52,7 +117,7 @@ export default function Signup() {
             }}>
                 <div className="mt-4 gap-x-3 justify-items-center">
                     <svg viewBox="0 0 24 24" fill="currentColor" data-slot="icon" aria-hidden="true" className="size-30 text-gray-500">
-                        <path d="M18.685 19.097A9.723 9.723 0 0 0 21.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12a9.723 9.723 0 0 0 3.065 7.097A9.716 9.716 0 0 0 12 21.75a9.716 9.716 0 0 0 6.685-2.653Zm-12.54-1.285A7.486 7.486 0 0 1 12 15a7.486 7.486 0 0 1 5.855 2.812A8.224 8.224 0 0 1 12 20.25a8.224 8.224 0 0 1-5.855-2.438ZM15.75 9a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" clip-rule="evenodd" fill-rule="evenodd" />
+                    <path d="M18.685 19.097A9.723 9.723 0 0 0 21.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12a9.723 9.723 0 0 0 3.065 7.097A9.716 9.716 0 0 0 12 21.75a9.716 9.716 0 0 0 6.685-2.653Zm-12.54-1.285A7.486 7.486 0 0 1 12 15a7.486 7.486 0 0 1 5.855 2.812A8.224 8.224 0 0 1 12 20.25a8.224 8.224 0 0 1-5.855-2.438ZM15.75 9a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" clipRule="evenodd" fillRule="evenodd" />
                     </svg>
                     <button type="button" className="font-delius rounded-md bg-white/10 px-3 py-2 text-sm font-semibold text-[#2E2805] inset-ring inset-ring-white/5 hover:bg-[#F0B6CF]/50">upload photo</button>
                 </div>

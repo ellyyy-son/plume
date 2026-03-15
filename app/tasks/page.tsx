@@ -59,15 +59,26 @@ export default async function Page({
 }) {
   const supabase = await createClient(); 
   const { filter } = await searchParams
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
 
-  const { data: allTasks } = await supabase.from('task').select('*')
+  if (userError || !user) {
+    throw new Error("You must be signed in to view your tasks.")
+  }
+
+  const { data: allTasks } = await supabase
+    .from('task')
+    .select('*')
+    .eq('user_id', user.id)
 
   const now = new Date()
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
   const endOfToday = new Date(startOfToday.getTime() + 24 * 60 * 60 * 1000)
   const endOfWeek = new Date(startOfToday.getTime() + 7 * 24 * 60 * 60 * 1000)
 
-  let query = supabase.from('task').select('*')
+  let query = supabase
+    .from('task')
+    .select('*')
+    .eq('user_id', user.id)
 
   if (filter === 'daily') {
     query = query

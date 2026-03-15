@@ -9,17 +9,42 @@ export default function NewJournalPage() {
     "use server";
 
     const supabase = await createClient();
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      console.error("AUTH USER ERROR:", userError?.message);
+      throw new Error("No authenticated user found.");
+    }
+
+    const { data: profileBySession, error: profileBySessionError } = await supabase
+      .from("profile")
+      .select("user_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (profileBySessionError) {
+      console.error("PROFILE LOOKUP ERROR:", profileBySessionError.message);
+      throw new Error("Unable to resolve profile. Please try again.");
+    }
+
+    if (!profileBySession?.user_id) {
+      throw new Error(
+        "No profile row found for current user. Please sign in again and contact support if this continues."
+      );
+    }
 
     const entry_title = formData.get("entry_title") as string;
     const entry_text = formData.get("entry_text") as string;
-
     const mood_id = Number(formData.get("mood_id"));
-    const { error } = await supabase
-      .from("journal_entry")
-      .insert({ entry_title, entry_text, mood_id, });
+
+    const { error } = await supabase.from("journal_entry").insert({
+      entry_title,
+      entry_text,
+      mood_id,
+      user_id: profileBySession.user_id,
+    });
 
     if (error) {
-      console.error("SUPABASE ERROR:", error);
       throw new Error(error.message);
     }
 
@@ -27,18 +52,12 @@ export default function NewJournalPage() {
   }
 
   return (
-     <>
+    <>
       <form action={createJournal} className="w-full flex flex-col gap-24 items-center mb-12">
-
-        
-        {/* Header */}
         <header className="w-full bg-[#FBF5D1] p-12">
-          <h1
-            className="text-center text-[#163F55] text-6xl font-cherry"
-          >
+          <h1 className="text-center text-[#163F55] text-6xl font-cherry">
             How are you feeling today?
           </h1>
-
           <MoodSelector />
         </header>
 
@@ -55,8 +74,6 @@ export default function NewJournalPage() {
             className="font-delius min-h-200 resize-y p-4 w-full border rounded-3xl"
             required
           />
-
-          {/* Save button */}
           <button
             type="submit"
             className="
@@ -67,11 +84,10 @@ export default function NewJournalPage() {
               hover:bg-[#F0B6CF] transition-colors
             "
           >
-            <FaSave/>
+            <FaSave />
           </button>
         </div>
 
-        {/* Upload / add button */}
         <button
           type="button"
           className="
@@ -86,5 +102,5 @@ export default function NewJournalPage() {
         </button>
       </form>
     </>
-  )
+  );
 }
