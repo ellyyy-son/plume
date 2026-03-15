@@ -21,6 +21,8 @@ function FullNav() {
   const [isUser, setIsUser] = useState<boolean>(false);
   const [isReady, setIsReady] = useState(false);
   const [username, setUsername] = useState("");
+  const [dpURL, setDPURL ] = useState("/chiikawa.jpg")
+  const [exp, setEXP] = useState(0);
 
   useEffect(() => {
     let mounted = true;
@@ -37,7 +39,7 @@ function FullNav() {
       try {
         const { data: profileData, error } = await supabase
           .from("profile")
-          .select("username")
+          .select("*")
           .eq("user_id", user.id)
           .maybeSingle();
 
@@ -47,6 +49,8 @@ function FullNav() {
 
         if (!mounted) return;
         setUsername(profileData?.username || getFallbackUsername(user) || "");
+        setEXP(profileData?.exp_amount);
+        setDPURL(profileData?.profile_pic_url);
       } catch (error) {
         console.error("PROFILE LOOKUP EXCEPTION:", error);
         if (mounted) {
@@ -106,6 +110,7 @@ function FullNav() {
     }
     setIsUser(false);
     setUsername("");
+    setEXP(0);
     router.replace('/login');
     router.refresh();
     console.log('Successfully signed out');
@@ -119,8 +124,11 @@ function FullNav() {
     <div className="w-[15%] shrink-0 top-0 sticky h-screen">
       <div className="flex flex-col h-screen bg-[#F7F9FC] shadow-sm border-r-12 border-r-[#ADD3EA] pt-8 pb-8 gap-12">
         <div className="flex flex-col items-center font-delius gap-4">
-          <Image src='/chiikawa.jpg' width={120} height={120} alt='Profile Picture' className="rounded-full border-4 border-[#4F84A5]"/>
-          <p className="text-lg font-bold">{username || "user"}</p>
+          <Image src={dpURL} width={120} height={120} alt='Profile Picture' className="rounded-full border-4 border-[#4F84A5]"/>
+          <div className="flex flex-col gap-2 items-center">
+            <p className="text-lg font-bold">{username || "user"}</p>
+            <p className="text-md font-bold rounded-2xl border-2 border-[#4F84A5]"><span className="m-4">EXP: {exp} </span></p>
+          </div>
           <Link href="/profile/edit"><p className="text-sm">edit profile</p></Link>
         </div>
         <nav className="flex flex-col items-center w-full gap-4 font-delius">
@@ -132,7 +140,7 @@ function FullNav() {
           <NavLink href="/" label="shop" />
           <NavLink href="/" label="gacha" />
           <NavLink href="/" label="dashboard" />
-          <NavLink href="/" label="inventory" />
+          <NavLink href="/inventory" label="inventory" />
           <NavLink href="/" label="item list" />
         </nav>
         <div className="flex flex-col items-center">
