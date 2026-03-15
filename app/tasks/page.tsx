@@ -17,40 +17,6 @@ type TaskWithDifficulty = {
   }
 }
 
-function calculateExpPoints(tasks: TaskWithDifficulty[]) {
-  let total = 0
-
-  for (const task of tasks) {
-    if (task.is_complete){
-        const base = task.difficulty?.difficulty_expamount ?? 0
-        if (task.completion_datetime && task.task_deadline){
-            
-            const completionDate = new Date(task.completion_datetime).getTime()
-            const deadlineDate = new Date(task.task_deadline).getTime()
-            const createdDate = new Date(task.created_at).getTime()
-            
-            const multiplier = completionDate - deadlineDate
-            const guide = createdDate - deadlineDate
-
-            total += base * 0.6
-
-            if (guide * 0.25 >= multiplier) {
-            total += base * 0.4
-            } else if (guide * 0.50 >= multiplier) {
-            total += base * 0.3
-            } else if (guide * 0.75 >= multiplier) {
-            total += base * 0.2
-            }
-        }
-        else {
-            total += base * 0.5
-        }
-    }
-  }
-
-  return total
-}
-
 
 export default async function Page({ 
   searchParams 
@@ -63,6 +29,16 @@ export default async function Page({
 
   if (userError || !user) {
     throw new Error("You must be signed in to view your tasks.")
+  }
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profile")
+    .select("exp_amount")
+    .eq("user_id", user.id)
+    .maybeSingle()
+
+  if (profileError) {
+    throw new Error("Unable to load your profile progress.")
   }
 
   const { data: allTasks } = await supabase
@@ -100,13 +76,7 @@ export default async function Page({
   const { data: difficulties } = await supabase.from('difficulty').select('*')
   const completedTasks = (tasks ?? []).filter(task => task.is_complete)
   const pendingTasks = (tasks ?? []).filter(task => !task.is_complete)
-
-  const tasksWithDifficulty = (allTasks ?? []).filter(task => task.is_complete)?.map(task => ({
-    ...task,
-    difficulty: difficulties?.find(d => d.difficulty_name === task.task_difficulty)
-  }))
-
-  const expPoints = calculateExpPoints(tasksWithDifficulty)
+  const expPoints = profile?.exp_amount ?? 0
 
   return (
     <div className='m-12 ml-32 flex flex-col gap-8'>
