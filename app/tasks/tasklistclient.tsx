@@ -66,6 +66,10 @@ export default function TaskListClient({
   const router = useRouter()
 
   async function updateTaskStatus(id: number, isComplete: boolean) {
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+    if (userError || !user) return
+
     const { error } = await supabase
       .from("task")
       .update({
@@ -73,6 +77,7 @@ export default function TaskListClient({
         completion_datetime: isComplete ? new Date().toISOString() : null,
       })
       .eq("id", id)
+      .eq("user_id", user.id)
 
     if (error) return
     router.refresh()
