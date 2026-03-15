@@ -37,12 +37,19 @@ export default function AddTaskButton({ difficulties }: AddTaskButtonProps) {
     setErrorMsg("")
 
     const deadline = `${deadlineDate}T${deadlineTime}`
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+    if (userError || !user) {
+      setErrorMsg("Unable to add task. Please sign in again.")
+      return
+    }
 
     const { error } = await supabase.from("task").insert({
       task_title: title,
       task_details: details,
       task_difficulty: difficulty,
       task_deadline: deadline || null,
+      user_id: user.id,
       is_complete: false,
     })
 

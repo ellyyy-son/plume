@@ -17,7 +17,7 @@ export default function Forgot_Password() {
             console.error('Password Update error:', error.message);
             return;
         }
-        router.push('/login');
+        router.push('/forgot-password/email-sent');
     }
 
 

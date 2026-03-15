@@ -1,58 +1,65 @@
-"use client"
+"use client";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from '@/utils/supabase/client';
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { ensureProfileRecord } from '@/utils/supabase/ensure-profile';
 
-export default async function Login() {
+export default function Confirm() {
+  const [status, setStatus] = useState("Preparing your account...");
+  const router = useRouter();
 
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+  useEffect(() => {
     const supabase = createClient();
-    const router = useRouter();
 
+    async function ensureProfileForConfirmedUser() {
+      const { data: userData, error } = await supabase.auth.getUser();
 
-    async function signInWithEmail() {
-        const { data, error } = await supabase.auth.signInWithPassword({
-            email: email,
-            password: password,
-            options: {
-                emailRedirectTo: `${window.location.origin}/confirm`,
-            },
-        });
+      if (error || !userData.user) {
+        setStatus("Could not verify your session. Please reopen the confirmation link from your email.");
+        return;
+      }
 
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
 
-        if (error) {
-            console.error('Sign in error:', error.message);
-            return;
+      const profileResult = await ensureProfileRecord(
+        supabase,
+        userData.user,
+        {
+          name:
+            typeof userData.user.user_metadata?.name === "string"
+              ? userData.user.user_metadata.name.trim()
+              : "",
+          username:
+            typeof userData.user.user_metadata?.username === "string"
+              ? userData.user.user_metadata.username.trim()
+              : "",
+          ...(accessToken ? { accessToken } : {}),
         }
-        router.push('/');
-        console.log('User signed in:', data.user);
+      );
+
+      if (!profileResult.ok) {
+        console.error("Profile bootstrap on confirm failed:", profileResult.error);
+        setStatus("Profile setup failed. Please check your details and try again.");
+        return;
+      }
+
+      setStatus("Profile ready. Redirecting to the app...");
+      setTimeout(() => router.push("/"), 1000);
     }
 
-    return (
-        <div className={"bg-[#FBF5D1] px-15 pt-20 pb-15 border-5 border-[#E4DCAB] rounded-4xl justify-items-center translate-x-75 translate-y-15 shadow-xl/40"}>
-            <h2 className="font-cherry text-[#2E2805] text-7xl pb-10">Login</h2>
+    ensureProfileForConfirmedUser();
+  }, [router]);
 
-            {/* e-mail text area */}
-            <div className="grid grid-rows-2 w-1/1 py-4 px-3">
-                <label htmlFor="new-password" className="self-center block font-delius text-xl/6 font-bold text-[#2E2805] basis-1/3">E-mail</label>
-                <div className="rounded-t-md bg-white wopacity-70 px-3 py-1 border-b-3 border-[#CCC38D] focus-within:border-[#F0B6CF]">
-                    <input id="new-password" type="text" name="new-password" placeholder="type your e-mail" className="font-delius block min-w-0 grow bg-transparent py-1.5 pr-3 pl-1 text-base text-[#2E2805] placeholder:text-[#CCC38D] focus:outline-none sm:text-sm/6" />
-                </div>
-            </div>
-            {/* password text area */}
-            <div className="grid grid-rows-2 w-1/1 py-4 px-3">
-                <label htmlFor="reenter-password" className="self-center block font-delius text-xl/6 font-bold text-[#2E2805] basis-1/3">Password</label>
-                <div className="rounded-t-md bg-white wopacity-70 px-3 py-1 border-b-3 border-[#CCC38D] focus-within:border-[#F0B6CF]">
-                    <input id="reenter-password" type="text" name="reenter-password" placeholder="type your password" className="font-delius block min-w-0 grow bg-transparent py-1.5 pr-3 pl-1 text-base text-[#2E2805] placeholder:text-[#CCC38D] focus:outline-none sm:text-sm/6" />
-                </div>
-            </div>
-
-            {/* buttons */}
-            <div className="grid grid-rows-2 p-4 gap-2.5">
-                <button type="submit" className="font-delius rounded-2xl bg-[#ADD3EA] px-23 py-2 text-sm font-semibold text-[#524601]">Reset Password</button>
-                <button type="button" className="font-delius rounded-2xl text-sm/6 bg-[#F0B6CF] px-23 py-2 font-semibold text-[#524601]">Back to Login</button>
-            </div>
-        </div>
-    );
+  return (
+    <div className="bg-[#FBF5D1] px-15 pt-20 pb-15 border-5 border-[#E4DCAB] rounded-4xl justify-items-center translate-x-75 translate-y-15 shadow-xl/40">
+      <h2 className="font-cherry text-[#2E2805] text-7xl pb-10">Account Confirmed</h2>
+      <p className="font-delius text-lg text-[#2E2805] mb-8">
+        Your account has been confirmed.
+      </p>
+      <p className="font-delius text-base text-[#2E2805]">
+        {status}
+      </p>
+    </div>
+  );
 }
