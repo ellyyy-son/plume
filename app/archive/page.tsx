@@ -36,21 +36,10 @@ export default async function Archive({
   }
 
   return (
-    // <div className="flex flex-col gap-4">
-    //   <ArchiveList entries={entries}/>
+    <div className="flex flex-col mx-16 mt-30">
       
-    // </div>
-    <div className="flex flex-col m-12">
-      <ArchiveList entries={entries}/>
-      
-      <div className="flex gap-1">
-        <ArchiveFilter currentFilter={filter}/>
-        </div>
-      
-    
       <div className='gap-8 bg-[#FBF5D1] p-4 rounded-b-lg rounded-e-lg border-4 border-[#CCC38D]'>
-      
-        <p>worm</p>
+        <ArchiveList entries={entries}/>
       </div>
     </div>
   )

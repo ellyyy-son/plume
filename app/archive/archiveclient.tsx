@@ -28,12 +28,21 @@ export default function ArchiveList({ entries }) {
   });
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 -translate-y-10">
 
-      <div className="flex gap-2">
-        <button onClick={() => setFilter("all")}>All</button>
-        <button onClick={() => setFilter("week")}>This Week</button>
-        <button onClick={() => setFilter("month")}>This Month</button>
+      <div className="flex gap-2 -translate-y-5 -translate-x-5">
+        <button 
+          onClick={() => setFilter("all")}
+          className={`hover:bg-[#fefdf8] font-delius bg-[#FBF5D1] py-2 px-10 rounded-t-xl border-x-4 border-t-4 border-[#CCC38D] `}
+          >All</button>
+        <button 
+        onClick={() => setFilter("week")}
+        className={` hover:bg-[#fefdf8] font-delius bg-[#FBF5D1] px-2 py-2 rounded-t-xl border-x-4 border-t-4 border-[#CCC38D]`}
+        >This Week</button>
+        <button 
+        onClick={() => setFilter("month")}
+        className={` hover:bg-[#fefdf8] font-delius bg-[#FBF5D1] px-2 py-2 rounded-t-xl border-x-4 border-t-4 border-[#CCC38D]`}
+        >This Month</button>
       </div>
 
       {filtered.map((entry) => (
