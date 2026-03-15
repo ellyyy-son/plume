@@ -21,6 +21,8 @@ function FullNav() {
   const [isUser, setIsUser] = useState<boolean>(false);
   const [isReady, setIsReady] = useState(false);
   const [username, setUsername] = useState("");
+  const [dpURL, setDPURL ] = useState("/chiikawa.jpg")
+  const [exp, setEXP] = useState(0);
 
   useEffect(() => {
     let mounted = true;
@@ -37,7 +39,7 @@ function FullNav() {
       try {
         const { data: profileData, error } = await supabase
           .from("profile")
-          .select("username")
+          .select("*")
           .eq("user_id", user.id)
           .maybeSingle();
 
@@ -47,6 +49,8 @@ function FullNav() {
 
         if (!mounted) return;
         setUsername(profileData?.username || getFallbackUsername(user) || "");
+        setEXP(profileData?.exp_amount);
+        setDPURL(profileData?.profile_pic_url);
       } catch (error) {
         console.error("PROFILE LOOKUP EXCEPTION:", error);
         if (mounted) {
@@ -106,6 +110,7 @@ function FullNav() {
     }
     setIsUser(false);
     setUsername("");
+    setEXP(0);
     router.replace('/login');
     router.refresh();
     console.log('Successfully signed out');

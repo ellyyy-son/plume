@@ -1,6 +1,8 @@
 import { createClient } from "@/utils/supabase/server";
 import Image from "next/image";
 import { cookies } from "next/headers";
+import BodyBackground from "./body_background";
+
 
 export async function getUserAccessories() {
 
@@ -47,21 +49,57 @@ export async function getUserAccessories() {
 
 export default async function Inventory() {
   const accessories = await getUserAccessories();
-
   return (
-    <div className="flex gap-4">
-      {accessories?.map((acc) => (
-      <div key={acc.accessory_id}>
-        <h1> {acc.accessory_name} </h1>
-        
-        <Image
-          src={acc.accessory_url}
-          alt={acc.accessory_name}
-          width={80}
-          height={80}
-        />
+    <>
+      <BodyBackground style="repeating-linear-gradient(90deg, #c08350 0px, #c08350 40px, #f0c09a 40px, #f0c09a 80px)" />
+
+      <header className="w-full bg-[#FBF5D1] px-[50px] py-[20px]">
+        <h2 className="text-right text-[#163F55] text-5xl font-cherry">
+          Inventory
+        </h2>
+      </header>
+
+      <div className="flex grid-cols-4 gap-4 p-8 border-b-80 border-solid border-b-[#eecc8e] inset-ring-4 inset-ring-[#FBF5D1]">
+        {accessories?.map((acc) => (
+          <div key={acc.accessory_id}>
+            <h1>{acc.accessory_name}</h1>
+            <Image
+              src={acc.accessory_url}
+              alt={acc.accessory_name}
+              width={80}
+              height={80}
+            />
+          </div>
+        ))}
       </div>
-      ))}
-    </div>
-  )
+
+      <div className="flex grid-cols-4 gap-4 p-8 border-b-80 border-solid border-b-[#eecc8e] inset-ring-4 inset-ring-[#FBF5D1]">
+        {accessories?.map((acc) => (
+          <div key={acc.accessory_id}>
+            <h1>{acc.accessory_name}</h1>
+            <Image
+              src={acc.accessory_url}
+              alt={acc.accessory_name}
+              width={80}
+              height={80}
+            />
+          </div>
+        ))}
+      </div>
+
+      <div className="flex grid-cols-4 gap-4 p-8 border-b-80 border-solid border-b-[#eecc8e] inset-ring-4 inset-ring-[#FBF5D1]">
+        {accessories?.map((acc) => (
+          <div key={acc.accessory_id}>
+            <h1>{acc.accessory_name}</h1>
+            <Image
+              src={acc.accessory_url}
+              alt={acc.accessory_name}
+              width={80}
+              height={80}
+            />
+          </div>
+        ))}
+      </div>
+    </>
+  );
 }
