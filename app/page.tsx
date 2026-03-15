@@ -18,6 +18,7 @@ type CharacterData = {
   userName: string;
   petName: string;
   moodId: number;
+  expAmount: number;
   pet: PetData;
   mood: MoodData;
 };
@@ -66,7 +67,7 @@ async function getCharacterSummary(): Promise<CharacterResult> {
 
   const { data: profile, error: profileError } = await supabase
     .from("profile")
-    .select("user_id, username, virtual_petid")
+    .select("user_id, username, virtual_petid, exp_amount")
     .eq("user_id", user.id)
     .maybeSingle();
 
@@ -103,6 +104,7 @@ async function getCharacterSummary(): Promise<CharacterResult> {
     kind: "ready",
     data: {
       userName: profile.username,
+      expAmount: profile.exp_amount ?? 0,
       petName: userPet.pet_name || "My Pet",
       moodId,
       pet,
@@ -182,6 +184,7 @@ async function CharacterPanel({
       </div>
       <div className="font-delius text-[#2E2805] space-y-3">
         <p className="text-3xl">Hi, {character.userName}!</p>
+        <p className="text-xl">EXP Points: {character.expAmount}</p>
         <div className="flex items-center gap-3 text-2xl">
           <span style={{ color: moodVisual.color }}>{moodVisual.icon}</span>
           <span>Current mood: {character.mood?.mood_name ?? `Mood ${character.moodId}`}</span>

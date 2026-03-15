@@ -20,6 +20,15 @@ type Task = {
   is_complete: boolean
 }
 
+type TaskRow = {
+  id: number
+  task_difficulty: string
+  task_deadline: string | null
+  created_at: string
+  completion_datetime: string | null
+  is_complete: boolean
+}
+
 function formatDate(dateString: string) {
   return new Intl.DateTimeFormat("en-PH", {
     month: "long",
@@ -57,6 +66,39 @@ type TaskListClientProps = {
   difficulties: Difficulty[]
 }
 
+function calculateExpReward(params: {
+  task: TaskRow
+  difficultyExpAmount: number
+  completionDate: string
+}) {
+  const { task, difficultyExpAmount, completionDate } = params
+  const base = difficultyExpAmount
+
+  if (!base) return 0
+
+  if (task.completion_datetime && task.task_deadline) {
+    const actualCompletionDate = new Date(completionDate).getTime()
+    const deadlineDate = new Date(task.task_deadline).getTime()
+    const createdDate = new Date(task.created_at).getTime()
+    const multiplier = actualCompletionDate - deadlineDate
+    const guide = createdDate - deadlineDate
+
+    let total = base * 0.6
+
+    if (guide * 0.25 >= multiplier) {
+      total += base * 0.4
+    } else if (guide * 0.50 >= multiplier) {
+      total += base * 0.3
+    } else if (guide * 0.75 >= multiplier) {
+      total += base * 0.2
+    }
+
+    return total
+  }
+
+  return base * 0.5
+}
+
 export default function TaskListClient({
   tasks,
   mode,
@@ -70,11 +112,51 @@ export default function TaskListClient({
 
     if (userError || !user) return
 
+    const { data: taskRows, error: taskError } = await supabase
+      .from("task")
+      .select("id, task_difficulty, task_deadline, created_at, completion_datetime, is_complete")
+      .eq("id", id)
+      .eq("user_id", user.id)
+
+    const task = taskRows?.[0] as TaskRow | undefined
+
+    if (taskError || !task || task.is_complete === isComplete) {
+      return
+    }
+
+    const difficultyExpAmount =
+      difficulties.find((difficulty) => difficulty.difficulty_name === task.task_difficulty)?.difficulty_expamount ?? 0
+
+    const now = new Date().toISOString()
+    const completionDateForReward = isComplete ? now : task.completion_datetime || now
+    const reward = calculateExpReward({
+      task: { ...task, completion_datetime: task.completion_datetime || now },
+      difficultyExpAmount,
+      completionDate: completionDateForReward,
+    })
+
+    const { data: profileRows } = await supabase
+      .from("profile")
+      .select("exp_amount")
+      .eq("user_id", user.id)
+
+    const currentExp = Number(profileRows?.[0]?.exp_amount ?? 0)
+    const newExp = Math.max(0, currentExp + (isComplete ? reward : -reward))
+
+    const profileUpdate = await supabase
+      .from("profile")
+      .update({ exp_amount: newExp })
+      .eq("user_id", user.id)
+
+    if (profileUpdate.error) {
+      return
+    }
+
     const { error } = await supabase
       .from("task")
       .update({
         is_complete: isComplete,
-        completion_datetime: isComplete ? new Date().toISOString() : null,
+        completion_datetime: isComplete ? now : null,
       })
       .eq("id", id)
       .eq("user_id", user.id)
