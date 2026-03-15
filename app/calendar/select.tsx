@@ -30,8 +30,8 @@ export default function CustomSelect({ value, options, onChange, className }: Cu
             {/* Trigger button */}
             <button
                 onClick={() => setOpen(o => !o)}
-                className="bg-white rounded-lg px-16 py-4 font-bold text-gray-700 
-          flex items-center justify-center gap-2 w-full cursor-pointer
+                className="bg-white rounded-xl px-16 py-4 font-bold text-gray-700 shadow-lg
+          flex items-center justify-center gap-2 w-full cursor-pointer text-xl
           hover:bg-gray-50 transition-colors"
             >
                 {value}
@@ -42,7 +42,7 @@ export default function CustomSelect({ value, options, onChange, className }: Cu
 
             {/* Dropdown */}
             {open && (
-                <ul className="absolute top-full mt-1 left-0 w-full bg-white rounded-lg 
+                <ul className="absolute top-full mt-1 left-0 w-full bg-white rounded-xl 
           shadow-lg z-50 max-h-52 overflow-y-auto [&::-webkit-scrollbar]:w-2
             [&::-webkit-scrollbar-track]:bg-transparent
             [&::-webkit-scrollbar-thumb]:bg-gray-300
