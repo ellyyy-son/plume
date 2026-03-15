@@ -18,7 +18,7 @@ export default function NewJournalPage() {
 
     const { data: profileBySession, error: profileBySessionError } = await supabase
       .from("profile")
-      .select("user_id")
+      .select("user_id, virtual_petid")
       .eq("user_id", user.id)
       .maybeSingle();
 
@@ -36,16 +36,55 @@ export default function NewJournalPage() {
     const entry_title = formData.get("entry_title") as string;
     const entry_text = formData.get("entry_text") as string;
     const mood_id = Number(formData.get("mood_id"));
+    if (!Number.isFinite(mood_id) || mood_id <= 0) {
+      throw new Error("Please select a mood before saving.");
+    }
 
-    const { error } = await supabase.from("journal_entry").insert({
-      entry_title,
-      entry_text,
-      mood_id,
-      user_id: profileBySession.user_id,
-    });
+    const { data: createdEntry, error } = await supabase
+      .from("journal_entry")
+      .insert({
+        entry_title,
+        entry_text,
+        mood_id,
+        user_id: profileBySession.user_id,
+      })
+      .select("user_id")
+      .single();
 
     if (error) {
       throw new Error(error.message);
+    }
+
+    if (!createdEntry?.user_id) {
+      throw new Error("Journal entry was saved but user id was not returned.");
+    }
+
+    if (createdEntry.user_id !== profileBySession.user_id) {
+      throw new Error("Journal owner does not match the current user.");
+    }
+
+    if (!profileBySession.virtual_petid) {
+      throw new Error("No selected pet linked to this account.");
+    }
+
+    const { data: ownedPet, error: petLookupError } = await supabase
+      .from("user_pet")
+      .select("virtual_petid")
+      .eq("virtual_petid", profileBySession.virtual_petid)
+      .eq("user_id", createdEntry.user_id)
+      .maybeSingle();
+
+    if (petLookupError || !ownedPet?.virtual_petid) {
+      throw new Error("No pet row found for this user while updating mood.");
+    }
+
+    const { error: moodUpdateError } = await supabase
+      .from("user_pet")
+      .update({ mood_id })
+      .eq("virtual_petid", ownedPet.virtual_petid);
+
+    if (moodUpdateError) {
+      throw new Error(moodUpdateError.message);
     }
 
     redirect("/journal");
