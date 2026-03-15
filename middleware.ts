@@ -22,6 +22,25 @@ function isPublicRoute(pathname: string) {
   return pathname.startsWith("/_next") || pathname.startsWith("/api/");
 }
 
+function isPetSelectionRoute(pathname: string) {
+  return pathname === "/pet-selection" || pathname.startsWith("/pet-selection/");
+}
+
+async function userNeedsPetSelection(supabase: ReturnType<typeof createServerClient>, userId: string) {
+  const { data: profile, error } = await supabase
+    .from("profile")
+    .select("virtual_petid")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Profile lookup failed in middleware:", error.message);
+    return false;
+  }
+
+  return !profile || profile.virtual_petid == null;
+}
+
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const isPublic = isPublicRoute(pathname);
@@ -45,8 +64,23 @@ export async function middleware(request: NextRequest) {
   );
 
   const { data: { user } } = await supabase.auth.getUser();
+  let shouldGoToPetSelection = false;
 
-  if (user && isPublicRoute(pathname)) {
+  if (user) {
+    shouldGoToPetSelection = await userNeedsPetSelection(supabase, user.id);
+
+    if (shouldGoToPetSelection && !isPetSelectionRoute(pathname)) {
+      const petSelectionResponse = NextResponse.redirect(
+        new URL("/pet-selection", request.url)
+      );
+      response.cookies.getAll().forEach((cookie) => {
+        petSelectionResponse.cookies.set(cookie.name, cookie.value);
+      });
+      response = petSelectionResponse;
+    }
+  }
+
+  if (user && isPublicRoute(pathname) && !shouldGoToPetSelection) {
     const redirectResponse = NextResponse.redirect(new URL("/", request.url));
     response.cookies.getAll().forEach((cookie) => {
       redirectResponse.cookies.set(cookie.name, cookie.value);
