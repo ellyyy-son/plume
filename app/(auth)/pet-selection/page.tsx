@@ -18,30 +18,30 @@ export async function getPetImages(){
     
     console.log(user.id)
 
-    const { data: petImages, error: notFound } = await supabase
-        .from("pet_model")
+    const { data: pets, error: notFound } = await supabase
+        .from("pet")
         .select("*")
-        .eq("user_id", user.id);   
+
     if (notFound) {
         console.error(notFound.message);
         return;
         }
-        console.log(petImages)
+        console.log(pets)
 
-    return petImages;
+    return pets;
     }
 
 
 export default async function petselection(){
-    const images = await getPetImages();
+    const pets = await getPetImages();
 
     return (
     <div className={"bg-[#FBF5D1] border-5 border-[#E4DCAB] grid grid-template-rows-2 h-150 w-250 pt-10 px-10 pb-20 rounded-4xl justify-items-center translate-x-10 translate-y-15 shadow-xl/40 overflow-hidden"}>
             <h1 className="font-cherry text-[#2E2805] text-6xl pb-10">CHOOSE YOUR PET</h1>
             <div className="flex gap-15 justify-center">
-                {images?.map((image) => (
-                    <div key={image.image_id} className="grid grid-template-rows-2 place-items-center gap-8">
-                        <Link href={`petselection/${image.image_title}`}><h3 className="font-delius text-3xl">{image.image_title}</h3></Link>
+                {pets?.map((pet) => (
+                    <div key={pet.pet_id} className="grid grid-template-rows-2 place-items-center gap-8">
+                        <Image src={pet.pet_model} width={500} height={500} alt={pet.pet_type} /><h3 className="font-delius text-3xl">{pet.pet_type}</h3>
                     </div>
                 ))}
             
