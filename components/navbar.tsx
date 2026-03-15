@@ -63,7 +63,7 @@ function FullNav() {
       <nav className="flex flex-col items-center w-full gap-4 font-delius">
           <NavLink href="/" label="home" active={pathname === "/"} />
           <NavLink href="/journal" label="write entry" active={pathname === "/"} />
-          <NavLink href="/journal" label="journal archive" active={pathname === "/"} />
+          <NavLink href="/archive" label="journal archive" active={pathname === "/"} />
           <NavLink href="/" label="calendar" active={pathname === "/"} />
           <NavLink href="/tasks" label="task list" active={pathname === "/"} />
           <NavLink href="/" label="shop" active={pathname === "/"} />
