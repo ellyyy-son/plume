@@ -9,11 +9,11 @@ export default function MoodSelector() {
   const [hoveredMood, setHoveredMood] = useState(null);
 
   const moods = [
-    { value: 1, icon: <FaFaceAngry size={40} />, color: "#FA5659", hover: "#ffb3ba" },
-    { value: 2, icon: <ImSad2 size={40} />, color: "#F7A34A", hover: "#ffdfba" },
+    { value: 5, icon: <FaFaceAngry size={40} />, color: "#FA5659", hover: "#ffb3ba" },
+    { value: 4, icon: <ImSad2 size={40} />, color: "#F7A34A", hover: "#ffdfba" },
     { value: 3, icon: <ImNeutral2 size={40} />, color: "#F8D042", hover: "#ffffba" },
-    { value: 4, icon: <FaSmile size={40} />, color: "#62B64D", hover: "#baffc9" },
-    { value: 5, icon: <FaSmileBeam size={40} />, color: "#484572", hover: "#bae1ff" },
+    { value: 2, icon: <FaSmile size={40} />, color: "#62B64D", hover: "#baffc9" },
+    { value: 1, icon: <FaSmileBeam size={40} />, color: "#484572", hover: "#bae1ff" },
   ];
 
   return (
