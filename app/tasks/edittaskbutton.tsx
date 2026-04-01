@@ -100,16 +100,15 @@ export default function EditTaskButton({ task, difficulties }: EditTaskButtonPro
               placeholder="Input name"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="border rounded-lg p-2"
-            />
+              className="border rounded-lg p-2"/>
             
             <h4 className="font-bold text-lg">DETAILS</h4>
             <textarea
               placeholder="Details"
               value={details}
               onChange={(e) => setDetails(e.target.value)}
-              className="border rounded-lg p-2"
-            />
+              className="border rounded-lg p-2"/>
+              
             <div className="flex gap-3">
               <div>
                 <h4 className="font-bold text-lg">DATE</h4>
