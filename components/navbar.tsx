@@ -126,8 +126,8 @@ function FullNav() {
   }
 
   return (
-    <div className="w-[15%] shrink-0 top-0 sticky h-screen">
-      <div className="flex flex-col h-screen bg-[#F7F9FC] shadow-sm border-r-12 border-r-[#ADD3EA] pt-8 pb-8 gap-12">
+    <div className="w-[18%] shrink-0 top-0 overflow-y-auto sticky h-screen">
+      <div className="flex flex-col bg-[#F7F9FC] shadow-sm border-r-15 border-r-[#ADD3EA] pt-8 pb-8 gap-12">
         <div className="flex flex-col items-center font-delius gap-4">
           <Image src={getProfilePicURL(dpURL)} width={120} height={120} alt='Profile Picture' className="rounded-full border-4 border-[#4F84A5]"/>
           <div className="flex flex-col gap-2 items-center">
@@ -149,7 +149,7 @@ function FullNav() {
           <NavLink href="/" label="item list" />
         </nav>
         <div className="flex flex-col items-center">
-          <button className="font-delius p-4 bg-[#ADD3EA] rounded-3xl font-bold" onClick={signOut}>Log Out</button>
+          <button className="font-delius py-2 px-4 bg-[#ADD3EA] border-3 border-[#5e94b67d] rounded-3xl font-bold" onClick={signOut}>Log Out</button>
         </div>
       </div>
     </div>
