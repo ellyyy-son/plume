@@ -60,95 +60,25 @@ export default async function Inventory() {
       </header>
 
       <div className="grid grid-cols-4 pt-8 inset-ring-4 inset-ring-[#FBF5D1] font-delius w-full border-b-120 border-[#FBF5D1] overflow-y-auto">
-          <div className="bg-[#ADD3EA] pt-4 px-4 rounded-xl border-4 border-[#FBF5D1] w-30 translate-y-5 -z-4 justify-self-center">
-            <h1 className="font-black">meow</h1>
-            <img
-              src="https://picsum.photos/80"
-              alt="pic"
-              width={80}
-              height={80}
-              className="place-self-center"
-              />
-          </div>
+          {accessories?.map((acc, index) => (
+            <>
+              <div className="bg-[#ADD3EA] pt-4 px-4 rounded-xl border-4 border-[#FBF5D1] w-30 translate-y-5 -z-4 justify-self-center">
+                <h1 className="font-black">{acc.accessory_name}</h1>
+                <img
+                  src={acc.accessory_url}
+                  alt={acc.accessory_name}
+                  width={80}
+                  height={80}
+                  className="place-self-center"
+                />
+              </div>
 
-          <div className="bg-[#ADD3EA] pt-4 px-4 rounded-xl border-4 border-[#FBF5D1] w-30 translate-y-5 -z-4 justify-self-center">
-            <h1 className="font-black">meow</h1>
-            <img
-              src="https://picsum.photos/80"
-              alt="pic"
-              width={80}
-              height={80}
-              className="place-self-center"
-              />
-          </div>
-
-          <div className="bg-[#ADD3EA] pt-4 px-4 rounded-xl border-4 border-[#FBF5D1] w-30 translate-y-5 -z-4 justify-self-center">
-            <h1 className="font-black">meow</h1>
-            <img
-              src="https://picsum.photos/80"
-              alt="pic"
-              width={80}
-              height={80}
-              className="place-self-center"
-              />
-          </div>
-
-          <div className="bg-[#ADD3EA] pt-4 px-4 rounded-xl border-4 border-[#FBF5D1] w-30 translate-y-5 -z-4 justify-self-center">
-            <h1 className="font-black">meow</h1>
-            <img
-              src="https://picsum.photos/80"
-              alt="pic"
-              width={80}
-              height={80}
-              className="place-self-center"
-              />
-          </div>
-
-          <div className="col-span-4 border-b-40 border-[#EFE8C1]"></div>
-          <div className="col-span-4 border-b-20 border-[#FBF5D1]"></div>
-
-          <div className="bg-[#ADD3EA] pt-4 px-4 rounded-xl border-4 border-[#FBF5D1] w-30 translate-y-5 -z-4 justify-self-center">
-            <h1 className="font-black">meow</h1>
-            <img
-              src="https://picsum.photos/80"
-              alt="pic"
-              width={80}
-              height={80}
-              className="place-self-center"
-              />
-          </div>
-
-        <div className="col-span-4 border-b-40 border-[#EFE8C1]"></div>
-        <div className="col-span-4 border-b-20 border-[#FBF5D1]"></div>
-
-        <div className="bg-[#ADD3EA] pt-4 px-4 rounded-xl border-4 border-[#FBF5D1] w-30 translate-y-5 -z-4 justify-self-center">
-            <h1 className="font-black">meow</h1>
-            <img
-              src="https://picsum.photos/80"
-              alt="pic"
-              width={80}
-              height={80}
-              className="place-self-center"
-              />
-          </div>
-
-          <div className="col-span-4 border-b-40 border-[#EFE8C1]"></div>
-          <div className="col-span-4 border-b-20 border-[#FBF5D1]"></div>
-
-          <div className="bg-[#ADD3EA] pt-4 px-4 rounded-xl border-4 border-[#FBF5D1] w-30 translate-y-5 -z-4 justify-self-center">
-            <h1 className="font-black">meow</h1>
-            <img
-              src="https://picsum.photos/80"
-              alt="pic"
-              width={80}
-              height={80}
-              className="place-self-center"
-              />
-          </div>
-          <div className="col-span-4 border-b-40 border-[#EFE8C1]"></div>
-          <div className="col-span-4 border-b-20 border-[#FBF5D1]"></div>
-
+              <div className="col-span-4 border-b-40 border-[#EFE8C1]"></div>
+              <div className="col-span-4 border-b-20 border-[#FBF5D1]"></div>
+            </>
+          ))}
         </div> 
+      
       
       {/* <div className="grid grid-cols-4 gap-6 p-8 border-b-8 border-solid border-b-[#eecc8e] inset-ring-4 inset-ring-[#FBF5D1] font-delius">
         {accessories?.map((acc, index) => (
