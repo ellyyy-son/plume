@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import Image from "next/image";
+import { createClient } from "@/utils/supabase/client";
+import { useRouter } from "next/navigation";
 
 type Accessory = {
   accessory_id: string;
@@ -23,6 +25,37 @@ const rarity: Record<string, { bg: string; text: string; border: string }> = {
 
 export default function ModalWithTrigger({ acc }: { acc: Accessory }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const router = useRouter();
+
+  const handleDelete = () => {
+    startTransition(async () => {
+      const supabase = createClient();
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        console.error("No user found");
+        return;
+      }
+
+      const { error } = await supabase
+        .from("accessory_owned")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("accessory_id", acc.accessory_id);
+
+      if (error) {
+        console.error("Delete failed:", error.message);
+        return;
+      }
+
+      setIsOpen(false);
+      router.refresh();
+    });
+  };
 
   return (
     <>
@@ -35,15 +68,20 @@ export default function ModalWithTrigger({ acc }: { acc: Accessory }) {
 
       {isOpen && (
         <div className="fixed inset-0 z-9999 flex items-center justify-center">
+<<<<<<< Updated upstream
 
           {/* Backdrop */}
+=======
+>>>>>>> Stashed changes
           <div
             className="absolute inset-0"
-            style={{ backgroundColor: "rgba(30, 18, 5, 0.72)", backdropFilter: "blur(4px)" }}
+            style={{
+              backgroundColor: "rgba(30, 18, 5, 0.72)",
+              backdropFilter: "blur(4px)",
+            }}
             onClick={() => setIsOpen(false)}
           />
 
-          {/* Modal Panel */}
           <div
             className="relative z-10 w-[90vw] max-w-2xl rounded-3xl p-8 shadow-2xl"
             style={{
@@ -52,25 +90,21 @@ export default function ModalWithTrigger({ acc }: { acc: Accessory }) {
               animation: "popIn 0.22s cubic-bezier(.34,1.56,.64,1) both",
             }}
           >
-            {/* Decorative corner dots */}
             <span className="absolute top-4 left-4 w-3 h-3 rounded-full bg-[#c08350] opacity-60" />
             <span className="absolute top-4 right-4 w-3 h-3 rounded-full bg-[#c08350] opacity-60" />
             <span className="absolute bottom-4 left-4 w-3 h-3 rounded-full bg-[#c08350] opacity-60" />
             <span className="absolute bottom-4 right-4 w-3 h-3 rounded-full bg-[#c08350] opacity-60" />
 
-            {/* Close button */}
             <button
               onClick={() => setIsOpen(false)}
               className="absolute top-2 right-2 w-12 h-12 rounded-full flex items-center justify-center font-black text-sm transition-colors block md:hidden"
               style={{ backgroundColor: "#c08350", color: "#FBF5D1" }}
-              onMouseOver={e => (e.currentTarget.style.backgroundColor = "#8b5c30")}
-              onMouseOut={e => (e.currentTarget.style.backgroundColor = "#c08350")}
             >
               ✕
             </button> 
 
-            {/* Header */}
             <div className="text-center mb-6">
+<<<<<<< Updated upstream
               <div className={`inline-block px-4 py-1 rounded-full text-xs font-black uppercase tracking-widest mb-3 
                   ${rarity[acc.accessory_rarity]?.bg} 
                   ${rarity[acc.accessory_rarity]?.text} 
@@ -79,32 +113,59 @@ export default function ModalWithTrigger({ acc }: { acc: Accessory }) {
               {acc.accessory_rarity}
             </div>
 
+=======
+              <div
+                className="inline-block px-4 py-1 rounded-full text-xs font-black uppercase tracking-widest mb-3"
+                style={{
+                  backgroundColor: "#ADD3EA",
+                  color: "#1a3e8c",
+                  border: "2px solid #4a80e0",
+                }}
+              >
+                {acc.accessory_rarity}
+              </div>
+>>>>>>> Stashed changes
               <h2
                 className="text-3xl font-black font-cherry text-[#2E2805] leading-tight"
               >
+<<<<<<< Updated upstream
                 { acc.accessory_name }
+=======
+                {acc.accessory_name}
+>>>>>>> Stashed changes
               </h2>
             </div>
 
-            {/* Divider */}
             <div className="border-t-2 border-dashed border-[#c08350] mb-6" />
 
-            {/* Content area */}
             <div className="flex gap-6 items-start">
-              {/* Image placeholder */}
               <div
+<<<<<<< Updated upstream
                 className={`shrink-0 w-32 h-32 rounded-2xl flex items-center justify-center text-4xl border-4 border-[#c08350]
                 ${rarity[acc.accessory_rarity]?.bg} `}
  
+=======
+                className="shrink-0 w-32 h-32 rounded-2xl flex items-center justify-center text-4xl"
+                style={{
+                  backgroundColor: "#ADD3EA",
+                  border: "4px solid #c08350",
+                }}
+>>>>>>> Stashed changes
               >
-                <Image src={acc.accessory_url} alt={acc.accessory_name} width={80} height={80} className="place-self-center"
+                <Image
+                  src={acc.accessory_url}
+                  alt={acc.accessory_name}
+                  width={80}
+                  height={80}
+                  className="place-self-center"
                 />
-            </div>
+              </div>
 
-              {/* Details */}
               <div className="flex-1 space-y-3">
                 <div>
-                  <p className="text-xs font-black uppercase tracking-widest text-[#c08350] mb-1">Description</p>
+                  <p className="text-xs font-black uppercase tracking-widest text-[#c08350] mb-1">
+                    Description
+                  </p>
                   <p className="text-sm text-[#3b3210] leading-relaxed">
                     {acc.accessory_description}
                   </p>
@@ -113,13 +174,22 @@ export default function ModalWithTrigger({ acc }: { acc: Accessory }) {
                 <div className="flex gap-3 flex-wrap">
                   <div
                     className="px-4 py-2 rounded-xl text-sm font-black"
-                    style={{ backgroundColor: "#e8dfc0", border: "2px solid #c08350", color: "#5a4a10" }}
+                    style={{
+                      backgroundColor: "#e8dfc0",
+                      border: "2px solid #c08350",
+                      color: "#5a4a10",
+                    }}
                   >
                     Type: {acc.accessory_type}
                   </div>
+
                   <div
                     className="px-4 py-2 rounded-xl text-sm font-black flex items-center gap-1"
-                    style={{ backgroundColor: "#ADD3EA", border: "2px solid #4a80e0", color: "#1a3e8c" }}
+                    style={{
+                      backgroundColor: "#ADD3EA",
+                      border: "2px solid #4a80e0",
+                      color: "#1a3e8c",
+                    }}
                   >
                     ⭐ {acc.accessory_exp}
                   </div>
@@ -127,16 +197,37 @@ export default function ModalWithTrigger({ acc }: { acc: Accessory }) {
               </div>
             </div>
 
-            {/* Footer button */}
-            <div className="mt-8 flex justify-center">
+            <div className="mt-8 flex justify-center gap-4">
               <button
                 onClick={() => setIsOpen(false)}
+<<<<<<< Updated upstream
                 className="px-8 py-3 rounded-xl font-black text-sm uppercase tracking-widest transition-colors hidden md:block"
                 style={{ backgroundColor: "#c08350", color: "#FBF5D1", border: "3px solid #8b5c30" }}
                 onMouseOver={e => (e.currentTarget.style.backgroundColor = "#8b5c30")}
                 onMouseOut={e => (e.currentTarget.style.backgroundColor = "#c08350")}
+=======
+                className="px-8 py-3 rounded-xl font-black text-sm uppercase tracking-widest"
+                style={{
+                  backgroundColor: "#c08350",
+                  color: "#FBF5D1",
+                  border: "3px solid #8b5c30",
+                }}
+>>>>>>> Stashed changes
               >
                 Close
+              </button>
+
+              <button
+                onClick={handleDelete}
+                disabled={isPending}
+                className="px-8 py-3 rounded-xl font-black text-sm uppercase tracking-widest disabled:opacity-50"
+                style={{
+                  backgroundColor: "#c94b4b",
+                  color: "#FBF5D1",
+                  border: "3px solid #8f2f2f",
+                }}
+              >
+                {isPending ? "Deleting..." : "Delete"}
               </button>
             </div>
           </div>
@@ -144,7 +235,7 @@ export default function ModalWithTrigger({ acc }: { acc: Accessory }) {
           <style>{`
             @keyframes popIn {
               from { transform: scale(0.75) translateY(20px); opacity: 0; }
-              to   { transform: scale(1)    translateY(0);    opacity: 1; }
+              to   { transform: scale(1) translateY(0); opacity: 1; }
             }
           `}</style>
         </div>

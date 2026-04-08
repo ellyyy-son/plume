@@ -37,7 +37,9 @@ export async function getUserAccessories() {
     return [];
   }
 
+  console.log(accessories)
   return accessories;
+
 }
 
 export default async function Inventory() {
