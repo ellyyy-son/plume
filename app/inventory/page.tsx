@@ -42,8 +42,30 @@ export async function getUserAccessories() {
 
 }
 
+export async function getUserExp() {
+  const cookieStore = cookies();
+  const supabase = await createClient(cookieStore);
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data, error } = await supabase
+    .from("profile")
+    .select("exp_amount")
+    .eq("user_id", user.id)
+    .single();
+
+  if (error) {
+    console.error(error.message);
+    return null;
+  }
+
+  return data?.exp_amount ?? 0;
+}
+
 export default async function Inventory() {
   const accessories = await getUserAccessories();
+  const userexp = await getUserExp();
 
   const divideIntoRows = <T,>(arr: T[], size: number): T[][] =>
     Array.from({ length: Math.ceil(arr.length / size) }, (_, i) =>
@@ -58,11 +80,20 @@ export default async function Inventory() {
     Epic:     { bg: "bg-yellow-200", text: "text-yellow-800" },
   };
 
+  
+
   return (
   <>
     <BodyBackground style="repeating-linear-gradient(90deg, #c08350 0px, #c08350 40px, #f0c09a 40px, #f0c09a 80px)" />
 
-    <header className="w-full bg-[#FBF5D1] px-12 py-10">
+    <header className="flex justify-between w-full bg-[#FBF5D1] px-10 py-10">
+      <div className="flex justify-center items-center bg-[#F5E8A0] border-4 border-[#D7B87F] rounded-2xl w-45 h-15 self-center shadow-md">
+      <h2 className="text-right text-[#2E2805] text-5xl font-cherry">
+        <p className="font-delius text-2xl font-bold text-[#2E2805]">
+          { userexp } EXP
+        </p>
+      </h2>
+      </div>
       <h2 className="text-right text-[#2E2805] text-5xl font-cherry">
         Inventory
       </h2>

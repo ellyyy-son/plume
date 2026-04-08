@@ -138,7 +138,6 @@ function FullNav() {
           <NavLink href="/" label="calendar" />
           <NavLink href="/tasks" label="task list" />
           <NavLink href="/" label="shop" />
-          <NavLink href="/" label="gacha" />
           <NavLink href="/" label="dashboard" />
           <NavLink href="/inventory" label="inventory" />
           <NavLink href="/" label="item list" />
