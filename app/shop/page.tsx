@@ -138,58 +138,32 @@ async function CharacterPanel({
   );
 }
 
-async function UserEXP({
-  getCharacter,
-}: {
-  getCharacter: Promise<CharacterResult>;
-}) {
-  const data = await getCharacter;
+export async function getUserExp() {
+  const cookieStore = cookies();
+  const supabase = await createClient(cookieStore);
 
-  if (data.kind === "notFound") {
-    return (
-      <div className="rounded-2xl border-4 border-[#E4DCAB] p-6 bg-[#fef5ffbb]">
-        <p className="font-delius text-lg text-[#2E2805]">Please log in to see your pet.</p>
-      </div>
-    );
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data, error } = await supabase
+    .from("profile")
+    .select("exp_amount")
+    .eq("user_id", user.id)
+    .single();
+
+  if (error) {
+    console.error(error.message);
+    return null;
   }
 
-  if (data.kind === "notSelected") {
-    return (
-      <div className="rounded-2xl border-4 border-[#E4DCAB] p-6 bg-[#fef5ffbb]">
-        <p className="font-delius text-lg text-[#2E2805] mb-3">
-          You have not selected a pet yet.
-        </p>
-        <Link href="/pet-selection" className="font-delius underline text-[#C17F9E]">
-          Choose your pet now
-        </Link>
-      </div>
-    );
-  }
-
-  const character = data.data;
-
-  if (!character.pet) {
-    return (
-      <div className="rounded-2xl border-4 border-[#E4DCAB] p-6 bg-[#fef5ffbb]">
-        <p className="font-delius text-lg text-[#2E2805]">Pet image unavailable. Please select a pet again.</p>
-        <Link href="/pet-selection" className="font-delius underline text-[#C17F9E]">Re-select pet</Link>
-      </div>
-    );
-  }
-
-  return (
-    <div>
-      <p className="font-delius text-2xl font-bold text-[#2E2805]">
-        {character.expAmount} EXP
-      </p>
-    </div>
-  );
+  return data?.exp_amount ?? 0;
 }
 
 
 export default async function Shop() {
   const accessories = await getAccessories();
   const character = getCharacterSummary();
+  const userexp = await getUserExp();
   const divideIntoRows = <T,>(arr: T[]): T[][] => {
   if (arr.length <= 2) return [arr];
   return [arr.slice(0, 2), ...Array.from({ length: Math.ceil((arr.length - 2) / 4) }, (_, i) =>
@@ -211,9 +185,11 @@ const rows = divideIntoRows(accessories);
       <header className="flex w-full justify-between bg-[#FBF5D1] py-5 px-15">
         <div className="flex justify-center items-center bg-[#F5E8A0] border-4 border-[#D7B87F] rounded-2xl w-45 h-15 self-center shadow-md">
           <h2 className="text-right text-[#2E2805] text-5xl font-cherry">
-          <UserEXP getCharacter={character}/>
-        </h2>
-        </div>
+            <p className="font-delius text-2xl font-bold text-[#2E2805]">
+              { userexp } EXP
+            </p>
+          </h2>
+      </div>
         <div className="flex justify-center place-items-center bg-[#F5E8A0] border-4 border-[#D7B87F] rounded-2xl w-55 px-20 py-5 me-15 translate-y-12 z-25 justify-self-end shadow-md">
           <h2 className="text-right text-[#2E2805] text-6xl font-cherry">
           SHOP
@@ -244,6 +220,10 @@ const rows = divideIntoRows(accessories);
               />
 
               <ModalWithTrigger acc={acc} />
+
+              <div className="bg-[#FBF5D1] px-5 mt-4 border-4 border-white rounded-2xl shadow-md">
+                  <h4 className="font-bold">{ acc.accessory_exp }</h4>
+                </div>
               
             </div>
             
@@ -255,7 +235,7 @@ const rows = divideIntoRows(accessories);
 
           {rowIndex < rows.length - 1 && (
             <>
-              <div className="col-span-4 border-b-100 border-[#EFE8C1]" />
+              <div className="col-span-4 border-b-100 border-[#EFE8C1] -z-1" />
               <div className="col-span-4 border-b-50 border-[#FBF5D1] shadow-md" />
             </>
           )}
