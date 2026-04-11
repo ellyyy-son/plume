@@ -284,7 +284,12 @@ export default function KawaiiCalendar() {
                 <div className="bg-[#CCC38D]">
                     {/* Header */}
                     <div className="flex flex-row items-center px-6 py-6">
-                        <div className="flex-1" />
+                        <div className="flex-1 flex justify-start">
+                            <button
+                                onClick={() => setCurrent(addMonths(current, -1))}
+                                className="bg-transparent border-2 border-white rounded-full w-12 h-12 flex items-center justify-center font-bold text-xl text-white hover:bg-[#92cbee] transition-colors"
+                            >←</button>
+                        </div>
                         <div className="flex flex-row gap-x-8 text-lg">
                             <CustomSelect
                                 value={format(current, "MMMM")}
@@ -308,7 +313,7 @@ export default function KawaiiCalendar() {
                         <div className="flex-1 flex justify-end">
                             <button
                                 onClick={() => setCurrent(addMonths(current, 1))}
-                                className="bg-transparent border-2 border-white rounded-full w-12 h-12 me-6 flex items-center justify-center font-bold text-xl text-white hover:bg-[#92cbee] transition-colors"
+                                className="bg-transparent border-2 border-white rounded-full w-12 h-12 flex items-center justify-center font-bold text-xl text-white hover:bg-[#92cbee] transition-colors"
                             >→</button>
                         </div>
                     </div>
@@ -392,7 +397,7 @@ export default function KawaiiCalendar() {
                                                             : (TASK_DIFFICULTY_COLORS[t.task_difficulty] ?? "bg-orange-200 text-orange-800")
                                                         }`}
                                                 >
-                                                    {urgency ? URGENCY_ICONS[urgency] : ""} {t.task_title}
+                                                    {t.task_title}
                                                 </div>
                                             );
                                         })}
