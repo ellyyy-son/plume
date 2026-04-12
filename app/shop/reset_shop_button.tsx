@@ -11,29 +11,141 @@ export default function ResetShopButton({ userexp }: { userexp: number }) {
   const router = useRouter()
 
   async function resetShop(){
-
-
     const { data: { user }, error: userError } = await supabase.auth.getUser()
     if (userError || !user) return
 
     if (canAfford){
-      const { data: profileRows } = await supabase
-        .from("profile")
-        .select("exp_amount")
-        .eq("user_id", user.id)
 
-      const currentExp = Number(profileRows?.[0]?.exp_amount ?? 0)
+    
+
+    let rolledAccessories = [];
+
+    const { data: commonAccessories } = await supabase
+      .from("accessory")
+      .select("*")
+      .eq("accessory_rarity", "Common");
+
+    if (!commonAccessories) {
+      return [];
+    }
+    
+    const { data: rareAccessories } = await supabase
+      .from("accessory")
+      .select("*")
+      .eq("accessory_rarity", "Rare");
+
+    if (!rareAccessories) {
+      return [];
+    }
+
+    const { data: epicAccessories } = await supabase
+      .from("accessory")
+      .select("*")
+      .eq("accessory_rarity", "Epic");
+
+    if (!epicAccessories) {
+      return [];
+    }
+    
+    const todayInManila = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Manila",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(new Date())
+
+    // 60% common chance, 30% rare chance, 10% epic chance
+    for (let i = 0; i < 8; i++){
+      // generate number from 1 to 100
+      const roll = Math.floor(Math.random() * 100) + 1
+      if(roll <= 60 && commonAccessories.length > 0){
+        let chosenIndex = Math.floor(Math.random() * commonAccessories.length)
+          rolledAccessories.push(commonAccessories[chosenIndex])
+          commonAccessories.splice(chosenIndex, 1)
+      } else if(roll <= 90 && rareAccessories.length > 0){
+        let chosenIndex = Math.floor(Math.random() * rareAccessories.length)
+          rolledAccessories.push(rareAccessories[chosenIndex])
+          rareAccessories.splice(chosenIndex, 1)
+      } else if (epicAccessories.length > 0){
+        let chosenIndex = Math.floor(Math.random() * epicAccessories.length)
+          rolledAccessories.push(epicAccessories[chosenIndex])
+          epicAccessories.splice(chosenIndex, 1)
+      }
+    }
+
+    // top 2 items. 70% rare chance, 25% epic chance, 5% common chance
+    for (let i = 0; i < 2; i++){
+
+      const roll = Math.floor(Math.random() * 100) + 1
+      if(roll <= 5 && commonAccessories.length > 0){
+        let chosenIndex = Math.floor(Math.random() * commonAccessories.length)
+          rolledAccessories.push(commonAccessories[chosenIndex])
+          commonAccessories.splice(chosenIndex, 1)
+      } else if(roll <= 75 && rareAccessories.length > 0){
+        let chosenIndex = Math.floor(Math.random() * rareAccessories.length)
+          rolledAccessories.push(rareAccessories[chosenIndex])
+          rareAccessories.splice(chosenIndex, 1)
+      } else if (epicAccessories.length > 0){
+        let chosenIndex = Math.floor(Math.random() * epicAccessories.length)
+          rolledAccessories.push(epicAccessories[chosenIndex])
+          epicAccessories.splice(chosenIndex, 1)
+      }
+    }
+
+    const rolledRows = rolledAccessories.map(accessory => ({
+      shop_date: todayInManila,
+      accessory_id: accessory.accessory_id,
+      user_id: user.id
+    }))
+
+    const { data: checker } = await supabase
+      .from("daily_shop")
+      .select("*")
+      .eq("shop_date", todayInManila)
+      .eq("user_id", user.id);
+
+    if (checker.length > 0) {
+      const { error } = await supabase
+        .from("daily_shop")
+        .delete()
+        .eq("shop_date", todayInManila)
+        .eq("user_id", user.id);
+        if (error) {
+        console.error(error.message);
+        return [];
+      }
+    }
+
+
+    const { error } = await supabase
+      .from("daily_shop")
+      .insert(rolledRows);
+
+    if (error) {
+      console.error(error.message);
+      return [];
+    }
+
+
+
+
+    const { data: profileRows } = await supabase
+      .from("profile")
+      .select("exp_amount")
+      .eq("user_id", user.id)
+
+    const currentExp = Number(profileRows?.[0]?.exp_amount ?? 0)
 
       // deduct exp
-      const newExp = currentExp - 1000
-      const profileUpdate = await supabase
-        .from("profile")
-        .update({ exp_amount: newExp })
-        .eq("user_id", user.id)   
+    const newExp = currentExp - 1000
+    const profileUpdate = await supabase
+      .from("profile")
+      .update({ exp_amount: newExp })
+      .eq("user_id", user.id)   
 
-      if(profileUpdate.error){
-        return
-      }
+    if(profileUpdate.error){
+      return
+    }
     
     setIsOpen(false)
     router.refresh()
@@ -63,10 +175,6 @@ export default function ResetShopButton({ userexp }: { userexp: number }) {
 
             <p className="mt-4 text-center font-delius text-lg leading-snug text-[#2E2805]">
               This will reroll today&apos;s shop for <span className="font-bold">1000 EXP</span>.
-            </p>
-
-            <p className="mt-4 text-center font-delius text-lg leading-snug text-[#2E2805]">
-              Refreshing or leaving the page will reset this.
             </p>
 
             <p className="mt-2 text-center font-delius text-base text-[#6B5622]">

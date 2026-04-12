@@ -173,6 +173,7 @@ export async function getShopAccessories(){
     const dailyShopRows = currAccessories.map(accessory => ({
       shop_date: todayInManila,
       accessory_id: accessory.accessory_id,
+      user_id: null
     }))
 
     const { error } = await supabase
