@@ -131,7 +131,7 @@ export default async function Archive({
   const { data: allEntries } = await supabase.from('entry').select('*')
   const now = new Date()
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-   const character = getCharacterSummary();
+  const character = getCharacterSummary();
   const endOfWeek = new Date(startOfToday.getTime() + 7 * 24 * 60 * 60 * 1000)
   const startMonth = startOfMonth(now)
   const endMonth = endOfMonth(now)
