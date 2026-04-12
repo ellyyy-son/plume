@@ -142,8 +142,7 @@ function FullNav() {
           <NavLink href="/archive" label="journal archive" />
           <NavLink href="/calendar" label="calendar" />
           <NavLink href="/tasks" label="task list" />
-          <NavLink href="/shop" label="shop" />
-          <NavLink href="/" label="gacha" />
+          <NavLink href="/" label="shop" />
           <NavLink href="/" label="dashboard" />
           <NavLink href="/inventory" label="inventory" />
           <NavLink href="/" label="item list" />
