@@ -41,6 +41,146 @@ export async function getAccessories() {
   return accessories;
 }
 
+export async function getDailyShop() {
+  'use server'
+  const cookieStore = cookies();
+  const supabase = await createClient(cookieStore);
+
+  const todayInManila = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Manila",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date())
+
+  const { data: dailyShop, error } = await supabase
+  .from("daily_shop")
+  .select("accessory_id")
+  .eq("shop_date", todayInManila);
+
+  if (error) {
+    console.error(error.message);
+    return [];
+  }
+
+  return dailyShop;
+}
+
+export async function getShopAccessories(){
+  'use server'
+  const cookieStore = cookies();
+  const supabase = await createClient(cookieStore);
+
+  const dailyShop = await getDailyShop() ?? [];
+
+  let currAccessories = [];
+
+  // add to the database + random logic
+  if(dailyShop.length === 0){
+
+    const { data: commonAccessories } = await supabase
+      .from("accessory")
+      .select("*")
+      .eq("accessory_rarity", "Common");
+
+    if (!commonAccessories) {
+      return [];
+    }
+    
+    const { data: rareAccessories } = await supabase
+      .from("accessory")
+      .select("*")
+      .eq("accessory_rarity", "Rare");
+
+    if (!rareAccessories) {
+      return [];
+    }
+
+    const { data: epicAccessories } = await supabase
+      .from("accessory")
+      .select("*")
+      .eq("accessory_rarity", "Epic");
+
+    if (!epicAccessories) {
+      return [];
+    }
+    
+    const todayInManila = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Manila",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(new Date())
+
+    // 60% common chance, 30% rare chance, 10% epic chance
+    for (let i = 0; i < 8; i++){
+      // generate number from 1 to 100
+      const roll = Math.floor(Math.random() * 100) + 1
+      if(roll <= 60 && commonAccessories.length > 0){
+        let chosenIndex = Math.floor(Math.random() * commonAccessories.length)
+          currAccessories.push(commonAccessories[chosenIndex])
+          commonAccessories.splice(chosenIndex, 1)
+      } else if(roll <= 90 && rareAccessories.length > 0){
+        let chosenIndex = Math.floor(Math.random() * rareAccessories.length)
+          currAccessories.push(rareAccessories[chosenIndex])
+          rareAccessories.splice(chosenIndex, 1)
+      } else if (epicAccessories.length > 0){
+        let chosenIndex = Math.floor(Math.random() * epicAccessories.length)
+          currAccessories.push(epicAccessories[chosenIndex])
+          epicAccessories.splice(chosenIndex, 1)
+      }
+    }
+
+    // top 2 items. 70% rare chance, 25% epic chance, 5% common chance
+    for (let i = 0; i < 2; i++){
+
+      const roll = Math.floor(Math.random() * 100) + 1
+      if(roll <= 5 && commonAccessories.length > 0){
+        let chosenIndex = Math.floor(Math.random() * commonAccessories.length)
+          currAccessories.push(commonAccessories[chosenIndex])
+          commonAccessories.splice(chosenIndex, 1)
+      } else if(roll <= 75 && rareAccessories.length > 0){
+        let chosenIndex = Math.floor(Math.random() * rareAccessories.length)
+          currAccessories.push(rareAccessories[chosenIndex])
+          rareAccessories.splice(chosenIndex, 1)
+      } else if (epicAccessories.length > 0){
+        let chosenIndex = Math.floor(Math.random() * epicAccessories.length)
+          currAccessories.push(epicAccessories[chosenIndex])
+          epicAccessories.splice(chosenIndex, 1)
+      }
+    }
+
+    const dailyShopRows = currAccessories.map(accessory => ({
+      shop_date: todayInManila,
+      accessory_id: accessory.accessory_id,
+    }))
+
+    const { error } = await supabase
+      .from("daily_shop")
+      .insert(dailyShopRows);
+
+    if (error) {
+      console.error(error.message);
+      return [];
+    }
+
+    return currAccessories;
+
+  } else {
+    const { data : dailyAccessories, error } = await supabase
+      .from("accessory")
+      .select("*")
+      .in("accessory_id", dailyShop.map(a => a.accessory_id))
+    
+    if (error || !dailyAccessories) {
+      return [];
+    }
+
+    return dailyAccessories;
+  }
+
+}
+
 export async function getOwnedAccesoriesID(){
   'use server'
   const cookieStore = cookies();
@@ -181,7 +321,7 @@ export async function getUserExp() {
 
 
 export default async function Shop() {
-  const accessories = await getAccessories();
+  const accessories = await getShopAccessories();
   const character = getCharacterSummary();
   const userexp = await getUserExp();
   const ownedAccessories = await getOwnedAccesoriesID() ?? []
