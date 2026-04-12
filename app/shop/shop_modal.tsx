@@ -159,7 +159,7 @@ export default function ModalWithTrigger({ acc,  isOwned, }: { acc: Accessory; i
             </div>
 
             {/* Footer button */}
-            <div className="mt-8 flex justify-center">
+            <div className="mt-8 flex justify-center gap-4">
               
               {!isOwned && (<button
                   onClick={() => {purchaseItem(acc)}}
