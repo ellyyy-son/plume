@@ -20,11 +20,20 @@ const rarity: Record<string, { bg: string; text: string; border: string }> = {
   Epic:     { bg: "bg-yellow-200", text: "text-yellow-800", border: "border-2 border-yellow-400" },
 };
 
-export default function ModalWithTrigger({ acc,  isOwned, }: { acc: Accessory; isOwned: boolean;}) {
+export default function ModalWithTrigger({
+  acc,
+  isOwned,
+  userexp,
+}: {
+  acc: Accessory;
+  isOwned: boolean;
+  userexp: number | null;
+}) {
 
   const [isOpen, setIsOpen] = useState(false);
   const supabase = createClient()
   const router = useRouter()
+  const canAfford = (userexp ?? 0) >= acc.accessory_exp
 
   async function purchaseItem(accessory: Accessory) {
     const { data: { user }, error: userError } = await supabase.auth.getUser()
@@ -161,17 +170,32 @@ export default function ModalWithTrigger({ acc,  isOwned, }: { acc: Accessory; i
             {/* Footer button */}
             <div className="mt-8 flex justify-center gap-4">
               
-              {!isOwned && (<button
-                  onClick={() => {purchaseItem(acc)}}
-                  className="px-8 py-3 rounded-xl font-black text-sm uppercase tracking-widest transition-colors block"
-                  style={{ backgroundColor: "#c08350", color: "#FBF5D1", border: "3px solid #8b5c30" }}
-                  onMouseOver={e => (e.currentTarget.style.backgroundColor = "#8b5c30")}
-                  onMouseOut={e => (e.currentTarget.style.backgroundColor = "#c08350")}
+              {!isOwned && (
+                <button
+                  onClick={() => {
+                    if (canAfford) {
+                      purchaseItem(acc)
+                    }
+                  }}
+                  disabled={!canAfford}
+                  className="px-8 py-3 rounded-xl font-black text-sm uppercase tracking-widest transition-colors block disabled:cursor-not-allowed"
+                  style={{
+                    backgroundColor: canAfford ? "#c08350" : "#b8b1a0",
+                    color: "#FBF5D1",
+                    border: `3px solid ${canAfford ? "#8b5c30" : "#8f8878"}`,
+                  }}
+                  onMouseOver={e => {
+                    if (canAfford) {
+                      e.currentTarget.style.backgroundColor = "#8b5c30"
+                    }
+                  }}
+                  onMouseOut={e => {
+                    e.currentTarget.style.backgroundColor = canAfford ? "#c08350" : "#b8b1a0"
+                  }}
                 >
-                  Buy
+                  {canAfford ? "Buy" : "Insufficient Funds"}
                 </button>
-                )
-              }
+              )}
             
 
               <button

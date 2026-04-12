@@ -419,7 +419,7 @@ return (
                     className="place-self-center h-25 w-25"
                   />
 
-                  <ModalWithTrigger acc={acc} isOwned={isOwned} />
+                  <ModalWithTrigger acc={acc} isOwned={isOwned} userexp={userexp} />
 
                   <div className="bg-[#FBF5D1] px-5 mt-4 border-4 border-white rounded-2xl shadow-md">
                       <h4 className="font-bold">{ isOwned ? "OWNED" : acc.accessory_exp }</h4>

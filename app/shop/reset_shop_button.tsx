@@ -170,11 +170,19 @@ export default function ResetShopButton({ userexp }: { userexp: number }) {
 
           <div className="relative z-10 w-[90vw] max-w-md rounded-3xl border-4 border-[#D7B87F] bg-[#FBF5D1] p-7 shadow-2xl">
             <h3 className="text-center font-cherry text-3xl text-[#2E2805]">
-              Reset Shop?
+              {canAfford ? "Reset Shop?" : "You do not have enough EXP"}
             </h3>
 
             <p className="mt-4 text-center font-delius text-lg leading-snug text-[#2E2805]">
-              This will reroll today&apos;s shop for <span className="font-bold">1000 EXP</span>.
+              {canAfford ? (
+                <>
+                  This will reroll today&apos;s shop for <span className="font-bold">1000 EXP</span>.
+                </>
+              ) : (
+                <>
+                  You need <span className="font-bold">1000 EXP</span> to reset the shop.
+                </>
+              )}
             </p>
 
             <p className="mt-2 text-center font-delius text-base text-[#6B5622]">
@@ -186,15 +194,17 @@ export default function ResetShopButton({ userexp }: { userexp: number }) {
                 onClick={() => setIsOpen(false)}
                 className="rounded-2xl border-4 border-[#D7B87F] bg-white px-5 py-2 font-delius font-bold text-[#2E2805] shadow-sm"
               >
-                Cancel
+                {canAfford ? "Cancel" : "Close"}
               </button>
 
-              <button
-                onClick={() => resetShop()}
-                className="rounded-2xl border-4 border-[#D7B87F] bg-[#F5E8A0] px-5 py-2 font-delius font-bold text-[#2E2805] shadow-sm"
-              >
-                Confirm Reset
-              </button>
+              {canAfford && (
+                <button
+                  onClick={() => resetShop()}
+                  className="rounded-2xl border-4 border-[#D7B87F] bg-[#F5E8A0] px-5 py-2 font-delius font-bold text-[#2E2805] shadow-sm"
+                >
+                  Confirm Reset
+                </button>
+              )}
             </div>
           </div>
         </div>
