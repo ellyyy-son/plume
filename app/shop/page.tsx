@@ -4,6 +4,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import BodyBackground from "./body_background";
 import ModalWithTrigger from "./shop_modal";
+import ResetTimer from "./reset_timer"
 
 type PetData = {
   pet_model: string;
@@ -354,12 +355,15 @@ return (
        <BodyBackground style="repeating-linear-gradient(90deg, #c08350 0px, #c08350 40px, #f0c09a 40px, #f0c09a 80px)" />
 
       <header className="flex w-full justify-between bg-[#FBF5D1] py-5 px-15">
+        <div className="flex items-center gap-4">
         <div className="flex justify-center items-center bg-[#F5E8A0] border-4 border-[#D7B87F] rounded-2xl w-45 h-15 self-center shadow-md">
           <h2 className="text-right text-[#2E2805] text-5xl font-cherry">
             <p className="font-delius text-2xl font-bold text-[#2E2805]">
               { userexp } EXP
             </p>
           </h2>
+      </div>
+      <ResetTimer />
       </div>
         <div className="flex justify-center place-items-center bg-[#F5E8A0] border-4 border-[#D7B87F] rounded-2xl w-55 px-20 py-5 me-15 translate-y-12 z-25 justify-self-end shadow-md">
           <h2 className="text-right text-[#2E2805] text-6xl font-cherry">
