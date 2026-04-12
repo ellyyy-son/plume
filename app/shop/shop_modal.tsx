@@ -1,5 +1,6 @@
-"use client";
-
+"use client"
+import { createClient } from "@/utils/supabase/client"
+import { useRouter } from "next/navigation"
 import { useState } from "react";
 import Image from "next/image";
 
@@ -19,10 +20,51 @@ const rarity: Record<string, { bg: string; text: string; border: string }> = {
   Epic:     { bg: "bg-yellow-200", text: "text-yellow-800", border: "border-2 border-yellow-400" },
 };
 
-
-
 export default function ModalWithTrigger({ acc }: { acc: Accessory }) {
   const [isOpen, setIsOpen] = useState(false);
+
+  const supabase = createClient()
+  const router = useRouter()
+
+  async function purchaseItem(accessory: Accessory) {
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    if (userError || !user) return
+
+    const { data: profileRows } = await supabase
+      .from("profile")
+      .select("exp_amount")
+      .eq("user_id", user.id)
+
+    const currentExp = Number(profileRows?.[0]?.exp_amount ?? 0)
+
+    // bro can afford it
+    if (currentExp >= accessory.accessory_exp){
+      // add to owned accessories
+      const accessoryUpdate = await supabase.from("accessory_owned").insert({
+        accessory_id: accessory.accessory_id,
+        user_id: user.id,
+      })
+
+      if (accessoryUpdate.error) {
+        return
+      }
+
+      // deduct exp
+      const newExp = currentExp - accessory.accessory_exp
+      const profileUpdate = await supabase
+        .from("profile")
+        .update({ exp_amount: newExp })
+        .eq("user_id", user.id)
+
+      if (profileUpdate.error) {
+        return
+      }
+      
+      setIsOpen(false)
+      router.refresh()
+    }
+  }
+
 
   return (
     <>
@@ -119,11 +161,13 @@ export default function ModalWithTrigger({ acc }: { acc: Accessory }) {
             {/* Footer button */}
             <div className="mt-8 flex justify-center">
               <button
-                className="px-8 py-3 rounded-xl font-black text-sm uppercase tracking-widest transition-colors hidden md:block"
+                onClick={() => {purchaseItem(acc)}}
+                className="px-8 py-3 rounded-xl font-black text-sm uppercase tracking-widest transition-colors block"
                 style={{ backgroundColor: "#c08350", color: "#FBF5D1", border: "3px solid #8b5c30" }}
-                >
+              >
                 Buy
               </button>
+
               <button
                 onClick={() => setIsOpen(false)}
                 className="px-8 py-3 rounded-xl font-black text-sm uppercase tracking-widest transition-colors hidden md:block"
