@@ -10,6 +10,11 @@ type ProfileLikeUser = {
   id: string; 
   user_metadata?: Record<string, unknown>; 
 };
+const DEFAULT_PROFILE_PIC = "/chiikawa.jpg";
+
+function getProfilePicURL(value: unknown): string {
+  return typeof value === "string" && value.trim() !== "" ? value : DEFAULT_PROFILE_PIC;
+}
 
 export default function Navbar() {
   return <FullNav />;
@@ -21,7 +26,7 @@ function FullNav() {
   const [isUser, setIsUser] = useState<boolean>(false);
   const [isReady, setIsReady] = useState(false);
   const [username, setUsername] = useState("");
-  const [dpURL, setDPURL ] = useState("/chiikawa.jpg")
+  const [dpURL, setDPURL ] = useState(DEFAULT_PROFILE_PIC)
   const [exp, setEXP] = useState(0);
 
   useEffect(() => {
@@ -50,7 +55,7 @@ function FullNav() {
         if (!mounted) return;
         setUsername(profileData?.username || getFallbackUsername(user) || "");
         setEXP(profileData?.exp_amount);
-        setDPURL(profileData?.profile_pic_url);
+        setDPURL(getProfilePicURL(profileData?.profile_pic_url));
       } catch (error) {
         console.error("PROFILE LOOKUP EXCEPTION:", error);
         if (mounted) {
@@ -121,10 +126,10 @@ function FullNav() {
   }
 
   return (
-    <div className="w-[15%] shrink-0 top-0 sticky h-screen">
-      <div className="flex flex-col h-screen bg-[#F7F9FC] shadow-sm border-r-12 border-r-[#ADD3EA] pt-8 pb-8 gap-12">
+    <div className="w-[18%] shrink-0 top-0 overflow-y-auto sticky h-screen">
+      <div className="flex flex-col bg-[#F7F9FC] shadow-sm border-r-15 border-r-[#ADD3EA] pt-8 pb-8 gap-12">
         <div className="flex flex-col items-center font-delius gap-4">
-          <Image src={dpURL} width={120} height={120} alt='Profile Picture' className="rounded-full border-4 border-[#4F84A5]"/>
+          <Image src={getProfilePicURL(dpURL)} width={120} height={120} alt='Profile Picture' className="rounded-full border-4 border-[#4F84A5]"/>
           <div className="flex flex-col gap-2 items-center">
             <p className="text-lg font-bold">{username || "user"}</p>
             <p className="text-md font-bold rounded-2xl border-2 border-[#4F84A5]"><span className="m-4">EXP: {exp} </span></p>
@@ -133,9 +138,9 @@ function FullNav() {
         </div>
         <nav className="flex flex-col items-center w-full gap-4 font-delius">
           <NavLink href="/" label="home" />
-          <NavLink href="/journal" label="write entry" />
-          <NavLink href="/journal" label="journal archive" />
-          <NavLink href="/" label="calendar" />
+          <NavLink href="/write" label="write entry" />
+          <NavLink href="/archive" label="journal archive" />
+          <NavLink href="/calendar" label="calendar" />
           <NavLink href="/tasks" label="task list" />
           <NavLink href="/" label="shop" />
           <NavLink href="/" label="dashboard" />
@@ -143,7 +148,7 @@ function FullNav() {
           <NavLink href="/" label="item list" />
         </nav>
         <div className="flex flex-col items-center">
-          <button className="font-delius p-4 bg-[#ADD3EA] rounded-3xl font-bold" onClick={signOut}>Log Out</button>
+          <button className="font-delius py-2 px-4 bg-[#ADD3EA] border-3 border-[#5e94b67d] rounded-3xl font-bold" onClick={signOut}>Log Out</button>
         </div>
       </div>
     </div>

@@ -82,54 +82,59 @@ export default function EditTaskButton({ task, difficulties }: EditTaskButtonPro
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="font-delius p-4 bg-[#ADD3EA] rounded-xl font-bold"
+        className="font-delius px-4 py-2 mt-2 bg-[#ADD3EA] rounded-xl font-bold border-3 border-[#8FBCD6]"
       >
         Edit Task
       </button>
 
       {isOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-8 w-96 flex flex-col gap-4">
+          <div className="bg-white rounded-2xl p-8 w-96 flex flex-col gap-4 border-3 border-[#F0B6CF]">
             {errorMsg && (
               <p className="text-red-500 text-sm">{errorMsg}</p>
             )}
 
-            Task Name
+            <h4 className="font-bold text-lg">TASK NAME</h4>
             <input
               type="text"
               placeholder="Input name"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="border rounded-lg p-2"
+              className="border-b-3 border-[#F0B6CF] p-2"
             />
             
-            Details
+            <h4 className="font-bold text-lg">DETAILS</h4>
             <textarea
               placeholder="Details"
               value={details}
               onChange={(e) => setDetails(e.target.value)}
-              className="border rounded-lg p-2"
-            />
-
-            Date
-            <input
-                type="date"
-                value={deadlineDate}
-                onChange={(e) => setDeadlineDate(e.target.value)}
-                className="border rounded-lg p-2 flex-1"
-              />
-              Due Time
-              <input
-                type="time"
-                value={deadlineTime}
-                onChange={(e) => setDeadlineTime(e.target.value)}
-                className="border rounded-lg p-2 flex-1"
-              />
+              className="border-b-3 border-[#F0B6CF] p-2"/>
+              
+            <div className="flex gap-3">
+              <div>
+                <h4 className="font-bold text-lg">DATE</h4>
+                <input
+                    type="date"
+                    value={deadlineDate}
+                    onChange={(e) => setDeadlineDate(e.target.value)}
+                    className="border-b-3 border-[#F0B6CF] p-2 mt-3 flex-1"/>
+              </div>
+                <div>
+                  <h4 className="font-bold text-lg">DUE TIME</h4>
+                  <input
+                    type="time"
+                    value={deadlineTime}
+                    onChange={(e) => setDeadlineTime(e.target.value)}
+                    className="border-b-3 border-[#F0B6CF] p-2 mt-3 flex-1"
+                  />
+                </div>
+              </div>
             
+            <h4 className="font-bold text-lg">DIFFICULTY</h4>
             <select
               value={difficulty}
               onChange={(e) => setDifficulty(e.target.value)}
-              className="border rounded-lg p-2"
+              className="border-2 border-[#F0B6CF] rounded-lg p-2"
             >
               <option value="">Select difficulty</option>
               {difficulties.map((d) => (
@@ -142,13 +147,13 @@ export default function EditTaskButton({ task, difficulties }: EditTaskButtonPro
             <div className="flex gap-4 justify-end">
               <button
                 onClick={() => setIsOpen(false)}
-                className="p-2 px-4 rounded-lg bg-gray-200"
+                className="p-2 px-4 rounded-4xl bg-gray-200"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSubmit}
-                className="p-2 px-4 rounded-lg bg-[#ADD3EA] font-bold"
+                className="p-2 px-7 rounded-4xl bg-[#ADD3EA] font-bold"
               >
                 Edit
               </button>

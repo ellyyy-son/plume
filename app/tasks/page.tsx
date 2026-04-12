@@ -17,40 +17,6 @@ type TaskWithDifficulty = {
   }
 }
 
-function calculateExpPoints(tasks: TaskWithDifficulty[]) {
-  let total = 0
-
-  for (const task of tasks) {
-    if (task.is_complete){
-        const base = task.difficulty?.difficulty_expamount ?? 0
-        if (task.completion_datetime && task.task_deadline){
-            
-            const completionDate = new Date(task.completion_datetime).getTime()
-            const deadlineDate = new Date(task.task_deadline).getTime()
-            const createdDate = new Date(task.created_at).getTime()
-            
-            const multiplier = completionDate - deadlineDate
-            const guide = createdDate - deadlineDate
-
-            total += base * 0.6
-
-            if (guide * 0.25 >= multiplier) {
-            total += base * 0.4
-            } else if (guide * 0.50 >= multiplier) {
-            total += base * 0.3
-            } else if (guide * 0.75 >= multiplier) {
-            total += base * 0.2
-            }
-        }
-        else {
-            total += base * 0.5
-        }
-    }
-  }
-
-  return total
-}
-
 
 export default async function Page({ 
   searchParams 
@@ -63,6 +29,16 @@ export default async function Page({
 
   if (userError || !user) {
     throw new Error("You must be signed in to view your tasks.")
+  }
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profile")
+    .select("exp_amount")
+    .eq("user_id", user.id)
+    .maybeSingle()
+
+  if (profileError) {
+    throw new Error("Unable to load your profile progress.")
   }
 
   const { data: allTasks } = await supabase
@@ -100,34 +76,30 @@ export default async function Page({
   const { data: difficulties } = await supabase.from('difficulty').select('*')
   const completedTasks = (tasks ?? []).filter(task => task.is_complete)
   const pendingTasks = (tasks ?? []).filter(task => !task.is_complete)
-
-  const tasksWithDifficulty = (allTasks ?? []).filter(task => task.is_complete)?.map(task => ({
-    ...task,
-    difficulty: difficulties?.find(d => d.difficulty_name === task.task_difficulty)
-  }))
-
-  const expPoints = calculateExpPoints(tasksWithDifficulty)
+  const expPoints = profile?.exp_amount ?? 0
 
   return (
     <div className='m-12 ml-32 flex flex-col gap-8'>
       <div className='bg-white outline-[#ADD3EA] outline-4 p-4 rounded-2xl w-fit'>
         <h2 className='font-delius text-2xl'>EXP Points: {expPoints}</h2>
       </div>
-
-      <div className='flex flex-col gap-8'>
-        <AddTaskButton difficulties={difficulties ?? []} />
-      </div>
-
       
       <div className='flex flex-col gap-8'>
-        <FilterButtons currentFilter={filter} />
+        <FilterButtons currentFilter={filter}/>
 
-        <div className='flex flex-col items-center justify-center bg-[#CCC38D] rounded-2xl w-full'>
+        <div className='flex flex-col items-center justify-center bg-[#D7CFA7] rounded-2xl w-full z-2'>
           <p className='font-cherry text-5xl text-center p-12'>
             {filter === 'daily' ? "Today's Tasks" : filter === 'week' ? "This Week's Tasks" : "All Tasks"}
           </p>
+        
+        <div className="grid grid-template-rows-2 w-full bg-[#FBF5D1] border-[#CCC38D] border-x-4 border-b-4 rounded-b-2xl">
+          <div className='justify-self-end flex flex-col w-40 mt-4 mr-12'>
+            <AddTaskButton difficulties={difficulties ?? []}/>
+          </div>
+
           {tasks && tasks.length > 0 ? (
-            <div className='flex flex-col bg-[#FBF5D1] font-delius p-8 rounded-b-2xl w-full'>
+            <div className='flex flex-col font-delius px-10 pb-5'>
+              
               {filter !== 'complete' && (
                 <div>
                 <h2>Pending Tasks</h2>
@@ -147,6 +119,7 @@ export default async function Page({
               <p>No tasks available</p>
             </div>
           )}
+        </div>
         </div>
       </div>
     </div>

@@ -4,8 +4,8 @@ import "../globals.css";
 import Navbar from "@/components/navbar";
 
 export const metadata: Metadata = {
-  title: "Your Inventory",
-  description: "View the items that you currently have!",
+  title: "Write an Entry",
+  description: "Write your daily Journal Entries here!",
 };
 
 const cherry = Cherry_Bomb_One({

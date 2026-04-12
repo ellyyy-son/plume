@@ -1,6 +1,7 @@
 import { createClient } from "@/utils/supabase/server";
-import Image from "next/image";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import Image from "next/image";
 import BodyBackground from "./body_background";
 import ModalWithTrigger from "./inventory_modal";
 

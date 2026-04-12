@@ -87,7 +87,7 @@ export default function NewJournalPage() {
       throw new Error(moodUpdateError.message);
     }
 
-    redirect("/journal");
+    redirect("/write");
   }
 
   return (

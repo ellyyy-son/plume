@@ -6,6 +6,8 @@ import { ensureProfileRecord } from '@/utils/supabase/ensure-profile';
 
 export default function Confirm() {
   const [status, setStatus] = useState("Preparing your account...");
+  const [isConfirmed, setIsConfirmed] = useState(false);
+  const [hasError, setHasError] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -15,7 +17,9 @@ export default function Confirm() {
       const { data: userData, error } = await supabase.auth.getUser();
 
       if (error || !userData.user) {
-        setStatus("Could not verify your session. Please reopen the confirmation link from your email.");
+        setHasError(true);
+        setStatus("Could not verify your confirmation link. Redirecting to sign up...");
+        setTimeout(() => router.replace("/signup"), 1400);
         return;
       }
 
@@ -40,12 +44,15 @@ export default function Confirm() {
 
       if (!profileResult.ok) {
         console.error("Profile bootstrap on confirm failed:", profileResult.error);
-        setStatus("Profile setup failed. Please check your details and try again.");
+        setHasError(true);
+        setStatus("Could not complete setup. Redirecting to sign up...");
+        setTimeout(() => router.replace("/signup"), 1400);
         return;
       }
 
+      setIsConfirmed(true);
       setStatus("Profile ready. Redirecting to pet selection...");
-      setTimeout(() => router.push("/pet-selection"), 1000);
+      setTimeout(() => router.replace("/pet-selection"), 1000);
     }
 
     ensureProfileForConfirmedUser();
@@ -53,10 +60,16 @@ export default function Confirm() {
 
   return (
     <div className="bg-[#FBF5D1] px-15 pt-20 pb-15 border-5 border-[#E4DCAB] rounded-4xl justify-items-center shadow-xl/40">
-      <h2 className="font-cherry text-[#2E2805] text-7xl pb-10">Account Confirmed</h2>
-      <p className="font-delius text-lg text-[#2E2805] mb-8">
-        Your account has been confirmed.
-      </p>
+      {isConfirmed && !hasError ? (
+        <>
+          <h2 className="font-cherry text-[#2E2805] text-7xl pb-10">Account Confirmed</h2>
+          <p className="font-delius text-lg text-[#2E2805] mb-8">
+            Your account has been confirmed.
+          </p>
+        </>
+      ) : hasError ? (
+        <h2 className="font-cherry text-[#2E2805] text-7xl pb-10">Confirmation Failed</h2>
+      ) : null}
       <p className="font-delius text-base text-[#2E2805]">
         {status}
       </p>
