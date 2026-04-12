@@ -47,6 +47,8 @@ export async function getDailyShop() {
   'use server'
   const cookieStore = cookies();
   const supabase = await createClient(cookieStore);
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  if (userError || !user) return
 
   const todayInManila = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Manila",
@@ -55,10 +57,26 @@ export async function getDailyShop() {
     day: "2-digit",
   }).format(new Date())
 
+  const { data: dailyShopRerolled, error: rerolledError } = await supabase
+    .from("daily_shop")
+    .select("accessory_id")
+    .eq("shop_date", todayInManila)
+    .eq("user_id", user.id);
+  
+  if (rerolledError) {
+    console.error(rerolledError.message);
+    return [];
+  }
+
+  if (dailyShopRerolled.length > 0) {
+    return dailyShopRerolled;
+  }
+
   const { data: dailyShop, error } = await supabase
   .from("daily_shop")
   .select("accessory_id")
-  .eq("shop_date", todayInManila);
+  .eq("shop_date", todayInManila)
+  .is("user_id", null);
 
   if (error) {
     console.error(error.message);
