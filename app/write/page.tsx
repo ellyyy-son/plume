@@ -35,12 +35,12 @@ export default function NewJournalPage() {
           required
         />
 
-        <button type="submit" className="fixed right-4 bottom-[120px] bg-[#FBF5D1] text-[#163F55] p-6 rounded-xl text-xl hover:bg-[#F0B6CF] transition-colors">
+        <button type="submit" className="fixed right-4 bottom-[120px] bg-[#FBF5D1] text-[#163F55] p-6 rounded-xl text-xl hover:bg-[#ccc38dad] transition-colors">
           <FaSave />
         </button>
       </div>
       <CharacterPanel />
-      <button type="button" className="fixed right-4 bottom-5 bg-[#ADD3EA] text-[#163F55] p-6 rounded-xl text-xl hover:bg-[#F0B6CF] transition-colors">
+      <button type="button" className="fixed right-4 bottom-5 bg-[#ADD3EA] text-[#163F55] p-6 rounded-xl text-xl hover:bg-[#163f5575] transition-colors">
         <IoAdd />
       </button>
     </form>
