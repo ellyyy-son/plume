@@ -68,11 +68,20 @@ async function getCharacterSummary(): Promise<CharacterResult> {
     return { kind: "notFound" };
   }
 
+  const moodId = Number(userPet.mood_id);
+
   const { data: pet } = await supabase
-    .from("pet")
-    .select("pet_model, pet_type")
-    .eq("pet_id", userPet.pet_id)
-    .maybeSingle();
+  .from("pet")
+  .select("pet_model, pet_type")
+  .eq("pet_id", userPet.pet_id)
+  .maybeSingle();
+
+  const { data: petMood } = await supabase
+  .from("pet_mood")
+  .select("image_url")
+  .eq("pet_id", userPet.pet_id)
+  .eq("mood_id", moodId)
+  .maybeSingle();
   
   const { data: slots } = await supabase
   .from("slot")
@@ -92,7 +101,10 @@ async function getCharacterSummary(): Promise<CharacterResult> {
       userName: profile.username,
       expAmount: profile.exp_amount ?? 0,
       petName: userPet.pet_name || "My Pet",
-      pet,
+      pet: pet ? { 
+         pet_type: pet.pet_type, 
+         pet_model: petMood?.image_url ?? pet.pet_model  // fallback to base model
+      } : null,
       equippedAccessories: equippedAccessories ?? [],
       slots: slots ?? [],
     },
@@ -142,22 +154,22 @@ async function CharacterPanel({
     <div className="flex flex-col items-end -translate-y-147 -translate-x-20 -z-1">
         <Image src={character.pet.pet_model} alt={character.pet.pet_type} width={150} height={150}/>
         {character.equippedAccessories.map((acc) => {
-                            const item = acc.accessory_owned?.accessory;
-                            if (!item) return null;
+           const item = acc.accessory_owned?.accessory;
+           if (!item) return null;
               
-                            const pos = character.slots.find((s) => s.slot_name === acc.slot);
+           const pos = character.slots.find((s) => s.slot_name === acc.slot);
               
-                            return (
-                             <Image
-                              key={acc.equipped_id}
-                              src={item.accessory_url}
-                              alt={item.accessory_name}
-                              width={150}
-                              height={150}
-                              className="absolute object-contain"
-                            />
-                          );
-                        })}
+           return (
+             <Image
+              key={acc.equipped_id}
+              src={item.accessory_url}
+              alt={item.accessory_name}
+              width={150}
+              height={150}
+              className="absolute object-contain"
+             />
+            );
+         })}
     </div>
   );
 }

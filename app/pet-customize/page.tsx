@@ -68,22 +68,30 @@ async function getPetCustomizationData(): Promise<CharacterResult> {
   }
 
   const { data: userPet, error: userPetError } = await supabase
-    .from("user_pet")
-    .select(`
-      virtual_petid,
-      pet_name,
-      pet:pet_id (
-        pet_id,
-        pet_type,
-        pet_model
-      )
-    `)
-    .eq("virtual_petid", profile.virtual_petid)
-    .maybeSingle();
+  .from("user_pet")
+  .select(`
+    virtual_petid,
+    pet_name,
+    mood_id,
+    pet:pet_id (
+      pet_id,
+      pet_type,
+      pet_model
+    )
+  `)
+  .eq("virtual_petid", profile.virtual_petid)
+  .maybeSingle();
 
-  if (userPetError || !userPet) {
-    return { kind: "notFound" };
-  }
+  if (userPetError || !userPet) return { kind: "notFound" };
+
+  const moodId = Number(userPet.mood_id);
+
+  const { data: petMood } = await supabase
+   .from("pet_mood")
+   .select("image_url")
+   .eq("pet_id", (userPet.pet as any).pet_id)
+   .eq("mood_id", moodId)
+   .maybeSingle();
 
   const { data: slotsData } = await supabase
     .from("slot")
@@ -161,12 +169,14 @@ async function getPetCustomizationData(): Promise<CharacterResult> {
     pet: userPet as {
       virtual_petid: number;
       pet_name: string;
+      mood_id: number;
       pet: {
         pet_id: number;
         pet_type: string;
         pet_model: string;
       } | null;
     },
+    petModelUrl: petMood?.image_url ?? (userPet.pet as any)?.pet_model ?? "",
     ownedAccessories,
     equippedAccessories,
     slots,
@@ -201,7 +211,7 @@ export default async function PetCustomizePage() {
     );
   }
 
-  const { pet, ownedAccessories, equippedAccessories, slots } = result;
+  const { pet, petModelUrl, ownedAccessories, equippedAccessories, slots } = result;
 
   if (!pet.pet) {
     return (
@@ -234,7 +244,7 @@ export default async function PetCustomizePage() {
           virtualPetId={pet.virtual_petid}
           petName={pet.pet_name}
           petType={pet.pet.pet_type}
-          petModel={pet.pet.pet_model}
+          petModel={petModelUrl} // mood image with fallback
           initialOwnedAccessories={ownedAccessories}
           initialEquippedAccessories={equippedAccessories}
           slots={slots}

@@ -267,11 +267,20 @@ async function getCharacterSummary(): Promise<CharacterResult> {
     return { kind: "notFound" };
   }
 
+  const moodId = Number(userPet.mood_id);
+
   const { data: pet } = await supabase
-    .from("pet")
-    .select("pet_model, pet_type")
-    .eq("pet_id", userPet.pet_id)
-    .maybeSingle();
+  .from("pet")
+  .select("pet_model, pet_type")
+  .eq("pet_id", userPet.pet_id)
+  .maybeSingle();
+
+  const { data: petMood } = await supabase
+  .from("pet_mood")
+  .select("image_url")
+  .eq("pet_id", userPet.pet_id)
+  .eq("mood_id", moodId)
+  .maybeSingle();
   
   const { data: slots } = await supabase
   .from("slot")
@@ -291,7 +300,10 @@ async function getCharacterSummary(): Promise<CharacterResult> {
       userName: profile.username,
       expAmount: profile.exp_amount ?? 0,
       petName: userPet.pet_name || "My Pet",
-      pet,
+      pet: pet ? { 
+         pet_type: pet.pet_type, 
+         pet_model: petMood?.image_url ?? pet.pet_model  // fallback to base model
+      } : null,
       equippedAccessories: equippedAccessories ?? [],
       slots: slots ?? [],
     },

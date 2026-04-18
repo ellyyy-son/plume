@@ -72,56 +72,52 @@ async function getCharacterSummary(): Promise<CharacterResult> {
   const supabase = await createClient();
 
   const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-  if (authError || !user) {
-    return { kind: "notFound" };
-  }
+  if (authError || !user) return { kind: "notFound" };
 
   const { data: profile, error: profileError } = await supabase
     .from("profile")
     .select("user_id, username, virtual_petid, exp_amount")
     .eq("user_id", user.id)
     .maybeSingle();
-
-  if (profileError || !profile) {
-    return { kind: "notFound" };
-  }
-
-  if (!profile.virtual_petid) {
-    return { kind: "notSelected" };
-  }
+  if (profileError || !profile) return { kind: "notFound" };
+  if (!profile.virtual_petid) return { kind: "notSelected" };
 
   const { data: userPet, error: userPetError } = await supabase
     .from("user_pet")
     .select("pet_name, mood_id, pet_id")
     .eq("virtual_petid", profile.virtual_petid)
     .maybeSingle();
-
-  if (userPetError || !userPet) {
-    return { kind: "notFound" };
-  }
+  if (userPetError || !userPet) return { kind: "notFound" };
 
   const moodId = Number(userPet.mood_id);
+  console.log("pet_id:", userPet.pet_id, "mood_id:", moodId);
 
   const { data: pet } = await supabase
-    .from("pet")
-    .select("pet_model, pet_type")
-    .eq("pet_id", userPet.pet_id)
-    .maybeSingle();
+  .from("pet")
+  .select("pet_type, pet_model")
+  .eq("pet_id", userPet.pet_id)
+  .maybeSingle();
+
+  const { data: petMood } = await supabase
+  .from("pet_mood")
+  .select("image_url")
+  .eq("pet_id", userPet.pet_id)
+  .eq("mood_id", moodId)
+  .maybeSingle();
 
   const { data: slots } = await supabase
-  .from("slot")
-  .select("slot_name, x, y")
-  .eq("pet_id", userPet.pet_id);
+    .from("slot")
+    .select("slot_name, x, y")
+    .eq("pet_id", userPet.pet_id);
 
   const moodName = Number.isFinite(moodId) ? await getMoodName(supabase, moodId) : null;
   const mood: MoodData = moodName ? { mood_name: moodName } : null;
 
   const { data: equippedAccessories } = await supabase
-  .from("pet_accessory_equipped")
-  .select("equipped_id, slot, accessory_owned(accessory_id, accessory(accessory_url, accessory_name))")
-  .eq("virtual_petid", profile.virtual_petid)
-  .returns<CharacterData["equippedAccessories"]>();
+    .from("pet_accessory_equipped")
+    .select("equipped_id, slot, accessory_owned(accessory_id, accessory(accessory_url, accessory_name))")
+    .eq("virtual_petid", profile.virtual_petid)
+    .returns<CharacterData["equippedAccessories"]>();
 
   return {
     kind: "ready",
@@ -130,7 +126,10 @@ async function getCharacterSummary(): Promise<CharacterResult> {
       expAmount: profile.exp_amount ?? 0,
       petName: userPet.pet_name || "My Pet",
       moodId,
-      pet,
+      pet: pet ? { 
+         pet_type: pet.pet_type, 
+         pet_model: petMood?.image_url ?? pet.pet_model  // fallback to base model
+      } : null,
       mood,
       equippedAccessories: equippedAccessories ?? [],
       slots: slots ?? [],
