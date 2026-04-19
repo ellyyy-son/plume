@@ -1,5 +1,12 @@
 export type MilestoneType = 'general' | 'easy' | 'medium' | 'hard'
 
+export const COLLECTION_REWARD = 1000
+export const COLLECTION_MAX_INDEX = 49 // threshold 500 = (49+1)*10
+
+export function getCollectionThreshold(index: number): number {
+  return (index + 1) * 10
+}
+
 const DIFFICULTY_THRESHOLDS = [10, 30, 50, 70, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
 
 export function getMilestoneThreshold(type: MilestoneType, index: number): number {

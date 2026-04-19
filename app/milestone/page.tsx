@@ -1,8 +1,8 @@
 import { createClient } from '@/utils/supabase/server'
 import MilestoneCard from './MilestoneCard'
 import JournalMilestoneCard from './JournalMilestoneCard'
-import { getMilestoneThreshold, getMilestoneReward } from './milestoneUtils'
-import { computeJournalStreak } from './milestoneUtils'
+import CollectionMilestoneCard from './CollectionMilestoneCard'
+import { getMilestoneThreshold, getMilestoneReward, computeJournalStreak, getCollectionThreshold, COLLECTION_MAX_INDEX } from './milestoneUtils'
 import type { MilestoneType } from './milestoneUtils'
 
 type ClaimedRow = {
@@ -49,6 +49,7 @@ export default async function MilestonePage() {
     { data: claimed },
     { data: profile },
     { data: journalEntries },
+    { count: ownedCount },
   ] = await Promise.all([
     supabase.from('task').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('is_complete', true),
     easyName   ? supabase.from('task').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('is_complete', true).eq('task_difficulty', easyName)   : Promise.resolve({ count: 0 }),
@@ -57,6 +58,7 @@ export default async function MilestonePage() {
     supabase.from('task_milestone_claimed').select('milestone_type, milestone_index, claimed_at').eq('user_id', user.id),
     supabase.from('profile').select('exp_amount').eq('user_id', user.id).maybeSingle(),
     supabase.from('journal_entry').select('entry_creation').eq('user_id', user.id),
+    supabase.from('accessory_owned').select('accessory_id', { count: 'exact', head: true }).eq('user_id', user.id),
   ])
 
   const allClaimed = (claimed as ClaimedRow[]) ?? []
@@ -74,6 +76,15 @@ export default async function MilestonePage() {
     ? Math.floor((Date.now() - new Date(lastJournalClaim.claimed_at).getTime()) / 86400000)
     : null
   const journalClaimable = journalStreak >= 7 && (daysSinceJournalClaim === null || daysSinceJournalClaim >= 7)
+
+  const collectionOwned = ownedCount ?? 0
+  const collectionNextIndex = (() => {
+    let index = 0
+    while (claimedSet.has(`collection:${index}`) && index <= COLLECTION_MAX_INDEX) index++
+    return index
+  })()
+  const collectionClaimable = collectionNextIndex <= COLLECTION_MAX_INDEX &&
+    collectionOwned >= getCollectionThreshold(collectionNextIndex)
 
   const completedCounts: Record<MilestoneType, number> = {
     general: totalCompleted ?? 0,
@@ -144,13 +155,17 @@ export default async function MilestonePage() {
         </div>
       </div>
 
-      {/* Journal Milestones Section */}
+      {/* Collection & Journal Milestones */}
       <div className="flex flex-col gap-4">
         <div className="bg-[#D7CFA7] rounded-2xl px-8 py-5">
-          <h2 className="font-cherry text-4xl text-[#2E2805]">Journal Milestones</h2>
+          <h2 className="font-cherry text-4xl text-[#2E2805]">Other Milestones</h2>
         </div>
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <CollectionMilestoneCard
+            ownedCount={collectionOwned}
+            nextIndex={collectionNextIndex}
+            isClaimable={collectionClaimable}
+          />
           <JournalMilestoneCard
             currentStreak={journalStreak}
             timesClaimed={journalTimesClaimed}

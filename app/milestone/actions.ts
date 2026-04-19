@@ -2,7 +2,7 @@
 
 import { createClient } from '@/utils/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { getMilestoneThreshold, getMilestoneReward, computeJournalStreak } from './milestoneUtils'
+import { getMilestoneThreshold, getMilestoneReward, computeJournalStreak, getCollectionThreshold, COLLECTION_REWARD, COLLECTION_MAX_INDEX } from './milestoneUtils'
 import type { MilestoneType } from './milestoneUtils'
 
 // difficultyName: the actual value stored in task.task_difficulty (null = count all difficulties)
@@ -124,5 +124,55 @@ export async function claimJournalMilestoneReward(): Promise<{ success?: boolean
 
   revalidatePath('/milestone')
   return { success: true, reward: JOURNAL_REWARD }
+}
+
+const COLLECTION_MILESTONE_TYPE = 'collection'
+
+export async function claimCollectionMilestoneReward(
+  milestoneIndex: number
+): Promise<{ success?: boolean; reward?: number; error?: string }> {
+  if (milestoneIndex > COLLECTION_MAX_INDEX) return { error: 'No more collection milestones' }
+
+  const supabase = await createClient()
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  if (authError || !user) return { error: 'Not authenticated' }
+
+  const { data: existing } = await supabase
+    .from('task_milestone_claimed')
+    .select('id')
+    .eq('user_id', user.id)
+    .eq('milestone_type', COLLECTION_MILESTONE_TYPE)
+    .eq('milestone_index', milestoneIndex)
+    .maybeSingle()
+
+  if (existing) return { error: 'Already claimed' }
+
+  const threshold = getCollectionThreshold(milestoneIndex)
+  const { count } = await supabase
+    .from('accessory_owned')
+    .select('accessory_id', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+
+  if ((count ?? 0) < threshold) return { error: 'Not enough items in collection' }
+
+  const { data: profile } = await supabase
+    .from('profile')
+    .select('exp_amount')
+    .eq('user_id', user.id)
+    .single()
+
+  const [expResult, claimResult] = await Promise.all([
+    supabase.from('profile').update({ exp_amount: (profile?.exp_amount ?? 0) + COLLECTION_REWARD }).eq('user_id', user.id),
+    supabase.from('task_milestone_claimed').insert({
+      user_id: user.id,
+      milestone_type: COLLECTION_MILESTONE_TYPE,
+      milestone_index: milestoneIndex,
+    }),
+  ])
+
+  if (expResult.error || claimResult.error) return { error: 'Failed to claim reward' }
+
+  revalidatePath('/milestone')
+  return { success: true, reward: COLLECTION_REWARD }
 }
 
