@@ -142,6 +142,19 @@ export default async function Entry({ params }: { params: Promise<{ id: string }
         <div className="overflow-y-auto h-70 bg-white rounded-xl p-5">
           <h1>{entry.entry_text}</h1>
         </div>
+      {/* For uploaded image */}
+      {entry.signedImageUrl && (
+        <div className="rounded-xl overflow-hidden">
+          <Image
+           src={entry.signedImageUrl}
+           alt="Journal entry image"
+           width={800}
+           height={400}
+           className="w-full object-cover"
+          />
+        </div>
+        )}
+      
         <DeleteButton id={id}/>
       </div>
       <CharacterPanel getCharacter={character}/>
