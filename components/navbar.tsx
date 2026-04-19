@@ -1,20 +1,15 @@
 "use client"
 
 import Link from "next/link";
-import Image from "next/image";
 import { useRouter } from 'next/navigation';
 import { createClient } from "@/utils/supabase/client";
 import { useEffect, useState } from "react";
 
-type ProfileLikeUser = { 
-  id: string; 
-  user_metadata?: Record<string, unknown>; 
+type ProfileLikeUser = {
+  id: string;
+  user_metadata?: Record<string, unknown>;
 };
 const DEFAULT_PROFILE_PIC = "/chiikawa.jpg";
-
-function getProfilePicURL(value: unknown): string {
-  return typeof value === "string" && value.trim() !== "" ? value : DEFAULT_PROFILE_PIC;
-}
 
 export default function Navbar() {
   return <FullNav />;
@@ -26,10 +21,9 @@ function FullNav() {
   const [isUser, setIsUser] = useState<boolean>(false);
   const [isReady, setIsReady] = useState(false);
   const [username, setUsername] = useState("");
-  const [dpURL, setDPURL ] = useState(DEFAULT_PROFILE_PIC)
+  const [dpURL, setDPURL] = useState(DEFAULT_PROFILE_PIC);
   const [exp, setEXP] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
-
 
   useEffect(() => {
     let mounted = true;
@@ -55,13 +49,26 @@ function FullNav() {
         }
 
         if (!mounted) return;
+
         setUsername(profileData?.username || getFallbackUsername(user) || "");
         setEXP(profileData?.exp_amount);
-        setDPURL(getProfilePicURL(profileData?.profile_pic_url));
+
+        // Convert stored path to public URL
+        const picPath = profileData?.profile_pic_url;
+        if (typeof picPath === "string" && picPath.trim() !== "") {
+          const { data: { publicUrl } } = supabase.storage
+            .from("profile_pics")
+            .getPublicUrl(picPath);
+          setDPURL(publicUrl);
+        } else {
+          setDPURL(DEFAULT_PROFILE_PIC);
+        }
+
       } catch (error) {
         console.error("PROFILE LOOKUP EXCEPTION:", error);
         if (mounted) {
           setUsername(getFallbackUsername(user) || "");
+          setDPURL(DEFAULT_PROFILE_PIC);
         }
       }
     };
@@ -129,7 +136,6 @@ function FullNav() {
 
   return (
     <>
-      {/* button to toggle the visibility of the navbar */}
       <button
         onClick={() => setIsVisible(!isVisible)}
         className="absolute top-2 left-2 z-50 p-2 rounded-md"
@@ -146,17 +152,16 @@ function FullNav() {
         </svg>
       </button>
 
-      {/* side bar appears only if visible */}
       {isVisible && (
         <div className="w-[18%] shrink-0 top-0 overflow-y-auto sticky h-screen">
           <div className="flex flex-col bg-[#F7F9FC] shadow-sm border-r-15 border-r-[#ADD3EA] pt-8 pb-8 gap-5">
             <div className="flex flex-col items-center font-delius gap-4">
-              <Image
-                src={getProfilePicURL(dpURL)}
+              <img
+                src={dpURL}
                 width={120}
                 height={120}
                 alt="Profile Picture"
-                className="rounded-full border-4 border-[#4F84A5]"
+                className="rounded-full border-4 border-[#4F84A5] w-[120px] h-[120px] object-cover"
               />
               <div className="flex flex-col gap-2 items-center">
                 <p className="text-lg font-bold">{username || "user"}</p>
@@ -166,7 +171,7 @@ function FullNav() {
               </div>
               <Link href="/profile/edit"><p className="text-sm">edit profile</p></Link>
             </div>
-          <nav className="flex flex-col items-center w-full gap-4 font-delius">
+            <nav className="flex flex-col items-center w-full gap-4 font-delius">
               <NavLink href="/" label="home" />
               <NavLink href="/write" label="write entry" />
               <NavLink href="/archive" label="journal archive" />
@@ -192,8 +197,6 @@ function FullNav() {
   );
 }
 
-
-
 function NavLink({ href, label }: { href: string; label: string }) {
   return (
     <Link
@@ -204,4 +207,3 @@ function NavLink({ href, label }: { href: string; label: string }) {
     </Link>
   );
 }
-
