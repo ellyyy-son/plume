@@ -63,7 +63,7 @@ export default async function MilestonePage() {
   const claimedSet = new Set(allClaimed.map((c) => `${c.milestone_type}:${c.milestone_index}`))
 
   const journalStreak = computeJournalStreak(
-    (journalEntries ?? []).map((e) => e.entry_creation?.slice(0, 10) ?? '')
+    (journalEntries ?? []).map((e) => e.entry_creation ?? '')
   )
   const journalClaimedRows = allClaimed.filter((c) => c.milestone_type === 'journal')
   const journalTimesClaimed = journalClaimedRows.length

@@ -81,7 +81,7 @@ export async function claimJournalMilestoneReward(): Promise<{ success?: boolean
     .select('entry_creation')
     .eq('user_id', user.id)
 
-  const streak = computeJournalStreak((entries ?? []).map((e) => e.entry_creation?.slice(0, 10) ?? ''))
+  const streak = computeJournalStreak((entries ?? []).map((e) => e.entry_creation ?? ''))
   if (streak < JOURNAL_STREAK_REQUIRED) return { error: 'Journal streak not reached' }
 
   // Get latest claim for this milestone type

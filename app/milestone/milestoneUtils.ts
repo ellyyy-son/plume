@@ -1,6 +1,6 @@
 export type MilestoneType = 'general' | 'easy' | 'medium' | 'hard'
 
-const DIFFICULTY_THRESHOLDS = [1, 30, 50, 70, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
+const DIFFICULTY_THRESHOLDS = [10, 30, 50, 70, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
 
 export function getMilestoneThreshold(type: MilestoneType, index: number): number {
   if (type === 'general') return (index + 1) * 20
@@ -25,25 +25,36 @@ export function getMilestoneReward(type: MilestoneType, index: number): number {
   return 5000
 }
 
+const MANILA_TZ = 'Asia/Manila'
+
+function toManilaDate(isoString: string): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: MANILA_TZ }).format(new Date(isoString))
+}
+
+function getManilaToday(): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: MANILA_TZ }).format(new Date())
+}
+
 export function computeJournalStreak(dates: string[]): number {
   if (dates.length === 0) return 0
 
-  const unique = [...new Set(dates.filter(Boolean))].sort().reverse()
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const todayStr = today.toISOString().slice(0, 10)
-  const yesterdayStr = new Date(today.getTime() - 86400000).toISOString().slice(0, 10)
+  // Convert all timestamps to Manila local dates
+  const unique = [...new Set(dates.filter(Boolean).map(toManilaDate))].sort().reverse()
 
+  const todayStr = getManilaToday()
+  const yesterdayStr = toManilaDate(new Date(Date.now() - 86400000).toISOString())
+
+  // Streak must include today or yesterday to still be alive
   if (unique[0] !== todayStr && unique[0] !== yesterdayStr) return 0
 
   let streak = 0
-  let expected = new Date(unique[0])
-  expected.setHours(0, 0, 0, 0)
+  let expectedDate = new Date(unique[0] + 'T00:00:00+08:00')
 
   for (const d of unique) {
-    if (d === expected.toISOString().slice(0, 10)) {
+    const expectedStr = new Intl.DateTimeFormat('en-CA', { timeZone: MANILA_TZ }).format(expectedDate)
+    if (d === expectedStr) {
       streak++
-      expected = new Date(expected.getTime() - 86400000)
+      expectedDate = new Date(expectedDate.getTime() - 86400000)
     } else {
       break
     }
