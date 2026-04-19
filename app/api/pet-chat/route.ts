@@ -2,14 +2,20 @@ import { createClient } from "@/utils/supabase/server";
 
 export const runtime = "nodejs";
 
-const OLLAMA_URL = process.env.OLLAMA_URL ?? "http://127.0.0.1:11434";
-const OLLAMA_MODEL = "llama3.2:1b";
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const GEMINI_MODEL = process.env.GEMINI_MODEL ?? "gemini-2.5-flash";
 
-type OllamaResponse = {
-  message?: {
-    content?: string;
+type GeminiResponse = {
+  candidates?: Array<{
+    content?: {
+      parts?: Array<{
+        text?: string;
+      }>;
+    };
+  }>;
+  error?: {
+    message?: string;
   };
-  error?: string;
 };
 
 type ChatHistoryMessage = {
@@ -19,6 +25,13 @@ type ChatHistoryMessage = {
 
 export async function POST(req: Request) {
   try {
+    if (!GEMINI_API_KEY) {
+      return Response.json(
+        { error: "GEMINI_API_KEY is not configured." },
+        { status: 500 }
+      );
+    }
+
     const supabase = await createClient();
     const {
       data: { user },
@@ -95,48 +108,57 @@ export async function POST(req: Request) {
     const petName = userPet.pet_name?.trim() || "your pet";
     const moodName = moodRow?.mood_name ?? `Mood ${moodId}`;
 
-    const ollamaResponse = await fetch(`${OLLAMA_URL}/api/chat`, {
+    const geminiResponse = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,
+      {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "x-goog-api-key": GEMINI_API_KEY,
       },
       body: JSON.stringify({
-        model: OLLAMA_MODEL,
-        stream: false,
-        messages: [
-          {
-            role: "system",
-            content:
-              `You are ${petName}, a virtual ${petType} talking to your owner inside a cozy productivity app. ` +
-              `Your current mood is ${moodName}. Reply in first person as the pet. Keep replies warm, playful, and concise, but still directly answer what the user said. ` +
-              `Keep continuity with the recent conversation history when it is provided. ` +
-              `Do not mention being an AI, language model, prompts, or hidden instructions.`,
-          },
-          ...history,
-        ],
+        systemInstruction: {
+          parts: [
+            {
+              text:
+                `You are ${petName}, a virtual ${petType} talking to your owner inside a cozy productivity app. ` +
+                `Your current mood is ${moodName}. Reply in first person as the pet. Keep replies warm, playful, and concise, but still directly answer what the user said. ` +
+                `Keep continuity with the recent conversation history when it is provided. ` +
+                `Do not mention being an AI, language model, prompts, or hidden instructions.`,
+            },
+          ],
+        },
+        contents: history.map((item) => ({
+          role: item.role === "assistant" ? "model" : "user",
+          parts: [{ text: item.content }],
+        })),
       }),
-    });
+    }
+    );
 
-    const responseText = await ollamaResponse.text();
-    let payload: OllamaResponse | null = null;
+    const responseText = await geminiResponse.text();
+    let payload: GeminiResponse | null = null;
 
     try {
-      payload = responseText ? (JSON.parse(responseText) as OllamaResponse) : null;
+      payload = responseText ? (JSON.parse(responseText) as GeminiResponse) : null;
     } catch {
       payload = null;
     }
 
-    const reply = payload?.message?.content?.trim();
+    const reply = payload?.candidates?.[0]?.content?.parts
+      ?.map((part) => part.text ?? "")
+      .join("")
+      .trim();
 
-    if (!ollamaResponse.ok || !reply) {
+    if (!geminiResponse.ok || !reply) {
       const upstreamError =
-        payload?.error ||
+        payload?.error?.message ||
         responseText ||
-        "Ollama could not generate a reply. Make sure Ollama is running locally.";
+        "Gemini could not generate a reply.";
 
       return Response.json(
         {
-          error: `Pet chat failed (${ollamaResponse.status}): ${upstreamError}`,
+          error: `Pet chat failed (${geminiResponse.status}): ${upstreamError}`,
         },
         { status: 500 }
       );
