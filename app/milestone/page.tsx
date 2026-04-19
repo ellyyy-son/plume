@@ -1,11 +1,14 @@
 import { createClient } from '@/utils/supabase/server'
 import MilestoneCard from './MilestoneCard'
+import JournalMilestoneCard from './JournalMilestoneCard'
 import { getMilestoneThreshold, getMilestoneReward } from './milestoneUtils'
+import { computeJournalStreak } from './milestoneUtils'
 import type { MilestoneType } from './milestoneUtils'
 
 type ClaimedRow = {
   milestone_type: string
   milestone_index: number
+  claimed_at: string
 }
 
 const MILESTONE_STYLE: Record<MilestoneType, { label: string; accentBg: string; accentBorder: string; accentText: string }> = {
@@ -45,18 +48,32 @@ export default async function MilestonePage() {
     { count: hardCompleted },
     { data: claimed },
     { data: profile },
+    { data: journalEntries },
   ] = await Promise.all([
     supabase.from('task').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('is_complete', true),
     easyName   ? supabase.from('task').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('is_complete', true).eq('task_difficulty', easyName)   : Promise.resolve({ count: 0 }),
     mediumName ? supabase.from('task').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('is_complete', true).eq('task_difficulty', mediumName) : Promise.resolve({ count: 0 }),
     hardName   ? supabase.from('task').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('is_complete', true).eq('task_difficulty', hardName)   : Promise.resolve({ count: 0 }),
-    supabase.from('task_milestone_claimed').select('milestone_type, milestone_index').eq('user_id', user.id),
+    supabase.from('task_milestone_claimed').select('milestone_type, milestone_index, claimed_at').eq('user_id', user.id),
     supabase.from('profile').select('exp_amount').eq('user_id', user.id).maybeSingle(),
+    supabase.from('journal_entry').select('entry_creation').eq('user_id', user.id),
   ])
 
-  const claimedSet = new Set(
-    (claimed as ClaimedRow[] ?? []).map((c) => `${c.milestone_type}:${c.milestone_index}`)
+  const allClaimed = (claimed as ClaimedRow[]) ?? []
+  const claimedSet = new Set(allClaimed.map((c) => `${c.milestone_type}:${c.milestone_index}`))
+
+  const journalStreak = computeJournalStreak(
+    (journalEntries ?? []).map((e) => e.entry_creation?.slice(0, 10) ?? '')
   )
+  const journalClaimedRows = allClaimed.filter((c) => c.milestone_type === 'journal')
+  const journalTimesClaimed = journalClaimedRows.length
+  const lastJournalClaim = journalClaimedRows.sort((a, b) =>
+    new Date(b.claimed_at).getTime() - new Date(a.claimed_at).getTime()
+  )[0]
+  const daysSinceJournalClaim = lastJournalClaim
+    ? Math.floor((Date.now() - new Date(lastJournalClaim.claimed_at).getTime()) / 86400000)
+    : null
+  const journalClaimable = journalStreak >= 7 && (daysSinceJournalClaim === null || daysSinceJournalClaim >= 7)
 
   const completedCounts: Record<MilestoneType, number> = {
     general: totalCompleted ?? 0,
@@ -124,6 +141,21 @@ export default async function MilestonePage() {
               />
             )
           })}
+        </div>
+      </div>
+
+      {/* Journal Milestones Section */}
+      <div className="flex flex-col gap-4">
+        <div className="bg-[#D7CFA7] rounded-2xl px-8 py-5">
+          <h2 className="font-cherry text-4xl text-[#2E2805]">Journal Milestones</h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <JournalMilestoneCard
+            currentStreak={journalStreak}
+            timesClaimed={journalTimesClaimed}
+            isClaimable={journalClaimable}
+          />
         </div>
       </div>
     </div>
