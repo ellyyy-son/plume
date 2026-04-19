@@ -50,7 +50,7 @@ export default function Signup() {
         const reader = new FileReader();
         reader.onload = (ev) => {
             const base64 = ev.target?.result as string;
-            sessionStorage.setItem('pending_profile_pic', JSON.stringify({ base64, name: file.name, type: file.type }));
+            localStorage.setItem('pending_profile_pic', JSON.stringify({ base64, name: file.name, type: file.type }));
         };
         reader.readAsDataURL(file);
     }

@@ -50,7 +50,7 @@ export default function Confirm() {
         return;
       }
 
-      const stored = sessionStorage.getItem('pending_profile_pic');
+      const stored = localStorage.getItem('pending_profile_pic');
       if (stored) {
         try {
           const { base64, name: fileName, type } = JSON.parse(stored);
@@ -68,7 +68,7 @@ export default function Confirm() {
           if (!uploadError && uploadData) {
             await supabase.from('profile').update({ profile_pic_url: uploadData.path }).eq('user_id', userData.user.id);
           }
-          sessionStorage.removeItem('pending_profile_pic');
+          localStorage.removeItem('pending_profile_pic');
         } catch (e) {
           console.error('Profile pic upload failed:', e);
         }
