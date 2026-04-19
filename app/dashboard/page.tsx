@@ -96,98 +96,129 @@ export default function UserDashboard() {
   }
 
   return (
-    <div style={{ padding: 40 }}>
-      <h1>{username ? `${username}'s Dashboard` : "Dashboard"}</h1>
+    <div className="mb-10">
+      <div className="bg-[#FBF5D1] font-cherry text-6xl py-6 px-15">
+        <h1>{username ? `${username}'s Dashboard` : "Dashboard"}</h1>
+      </div>
 
       {/* KPIs */}
-      <div style={{ marginTop: 20 }}>
-        <p>✅ Completed: {kpis?.tasksCompleted}</p>
-        <p>📊 Total: {kpis?.totalTasks}</p>
-        <p>⏳ Pending: {kpis?.pendingTasks}</p>
-        <p>📈 Completion Rate: {kpis?.completionRate}%</p>
-      </div>
+      {/* <div style={{ marginTop: 20 }}, {{ padding: 40 }}> */}
+      <div className="px-30 pt-15 font-cherry">
+        <h2 className="font-cherry text-4xl">Task Trends</h2>
+        <div className="bg-white font-delius mt-5 p-5 rounded-lg px-20 shadow-md">
+          {/* <h5 className="font-cherry">Overview</h5> */}
+          <p>✅ Completed: {kpis?.tasksCompleted}</p>
+          <p>📊 Total: {kpis?.totalTasks}</p>
+          <p>⏳ Pending: {kpis?.pendingTasks}</p>
+          <p>📈 Completion Rate: {kpis?.completionRate}%</p>
+        </div>
 
-      {/* Tasks Over Time */}
-      <div style={{ marginTop: 30 }}>
-        <h3>Tasks Over Time</h3>
-        <Plot
-          data={[
-            {
-              type: "scatter",
-              mode: "lines+markers",
-              x: tasksOverTime.map((d) => d.date),
-              y: tasksOverTime.map((d) => d.completed),
-            },
-          ]}
-          layout={{ width: 500, height: 300, title: "Tasks Completed" }}
-        />
-      </div>
+        <div className="grid grid-cols-2 gap-5">
+        {/* Tasks Over Time */}
+          <div className="mt-10 bg-[#ADD3EA] shadow-md py-6 px-5 rounded-xl overflow-auto">
+            <h3 className="text-2xl mb-3">Tasks Over Time</h3>
+            <div className="flex justify-center items-center">
+              <Plot
+                data={[
+                  {
+                    type: "scatter",
+                    mode: "lines+markers",
+                    x: tasksOverTime.map((d) => d.date),
+                    y: tasksOverTime.map((d) => d.completed),
+                  },
+                ]}
+                layout={{ width: 350, height: 300, title: "Tasks Completed" }}
+              />
+            </div>
+          </div>
 
-      {/* Difficulty */}
-      <div style={{ marginTop: 30 }}>
-        <h3>Difficulty Breakdown</h3>
-        <Plot
-          data={[
-            {
-              type: "bar",
-              x: difficulty.map((d) => d.label),
-              y: difficulty.map((d) => d.total),
-            },
-          ]}
-          layout={{ width: 500, height: 300, title: "Tasks by Difficulty" }}
-        />
-      </div>
+        {/* Difficulty */}
+          <div className="mt-10 bg-[#FBF5D1] shadow-md py-6 ps-5 rounded-xl overflow-auto">
+            <h3 className="text-2xl mb-3">Difficulty Breakdown</h3>
+            <div className="flex justify-center items-center">
+            <Plot
+              data={[
+                {
+                  type: "bar",
+                  x: difficulty.map((d) => d.label),
+                  y: difficulty.map((d) => d.total),
+                },
+              ]}
+              layout={{ width: 350, height: 300, title: "Tasks by Difficulty" }}
+            />
+            </div>
+          </div>
+        </div> 
 
+      <h2 className="font-cherry text-4xl mt-10">Journal Trends</h2>
+      <div className="grid grid-cols-2 gap-5">
       {/* Mood */}
-      <div style={{ marginTop: 30 }}>
-        <h3>Mood Distribution</h3>
-        <Plot
-          data={[
-            {
-              type: "bar",
-              x: mood.map((m) => m.label),
-              y: mood.map((m) => m.value),
-            },
-          ]}
-          layout={{ width: 500, height: 300, title: "Mood Frequency" }}
-        />
-      </div>
+        <div className="mt-5 bg-[#FBF5D1] shadow-md py-6 px-5 rounded-xl overflow-auto">
+          <h3 className="text-2xl mb-3">Mood Distribution</h3>
+          <div className="flex justify-center items-center">
+          <Plot
+            data={[
+              {
+                type: "bar",
+                x: mood.map((m) => m.label),
+                y: mood.map((m) => m.value),
+              },
+            ]}
+            layout={{ width: 350, height: 300, title: "Mood Frequency" }}
+          />
+          </div>
+        </div>
 
       {/* Journal */}
-      <div style={{ marginTop: 30 }}>
-        <h3>Journal Frequency</h3>
-        <Plot
-          data={[
-            {
-              type: "bar",
-              x: journalFreq.map((j) => j.week),
-              y: journalFreq.map((j) => j.count),
-            },
-          ]}
-          layout={{ width: 500, height: 300, title: "Entries per Week" }}
-        />
-      </div>
+        <div className="mt-5 bg-white shadow-md py-6 px-5 rounded-xl overflow-auto">
+          <h3 className="text-2xl mb-3">Journal Frequency</h3>
+          <div className="flex justify-center items-center">
+          <Plot
+            data={[
+              {
+                type: "bar",
+                x: journalFreq.map((j) => j.week),
+                y: journalFreq.map((j) => j.count),
+              },
+            ]}
+            layout={{ width: 350, height: 300, title: "Entries per Week" }}
+          />
+          </div>
+        </div>
+        </div>
 
-      {/* Events */}
-      <div style={{ marginTop: 30 }}>
-        <h3>Event Categories</h3>
-        <Plot
-          data={[
-            {
-              type: "pie",
-              labels: eventCats.map((e) => e.label),
-              values: eventCats.map((e) => e.value),
-            },
-          ]}
-          layout={{ width: 500, height: 300, title: "Events" }}
-        />
-      </div>
+      <h2 className="font-cherry text-4xl mt-10">Other Trends</h2>
+      <div className="grid grid-cols-3 gap-5">
+        {/* Events */}
+          <div className="col-span-2 mt-5 bg-white shadow-md pt-6 ps-5 rounded-xl overflow-auto">
+            <h3 className="text-2xl mb-3">Event Categories</h3>
+            <div className="flex justify-center items-center">
+            <Plot
+              data={[
+                {
+                  type: "pie",
+                  labels: eventCats.map((e) => e.label),
+                  values: eventCats.map((e) => e.value),
+                },
+              ]}
+              layout={{ width: 600, height: 400, title: "Events" }}
+            />
+            </div>
+          </div>
 
-      {/* Streak */}
-      <div style={{ marginTop: 30 }}>
-        <h3>🔥 Streak</h3>
-        <p>Current: {streak?.currentStreak} days</p>
-        <p>Longest: {streak?.longestStreak} days</p>
+        {/* Streak */}
+          <div className="flex flex-col gap-8 mt-5 bg-white shadow-md py-6 px-6 rounded-xl">
+            <h3 className="text-3xl mb-3">🔥 Streak</h3>
+            <div className="col-span-2 bg-[#ADD3EA] shadow-md p-6 rounded-xl">
+              <p className="text-2xl place-self-center">Current: {streak?.currentStreak} days</p>
+            </div>
+
+            <div className="col-span-2 bg-[#FBF5D1] shadow-md p-6 rounded-xl">
+              <p className="text-2xl place-self-center">Longest: {streak?.longestStreak} days</p>
+            </div>
+          </div>
+          </div>
+
       </div>
     </div>
   );
