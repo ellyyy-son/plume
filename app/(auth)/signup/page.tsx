@@ -16,6 +16,33 @@ export default function Signup() {
     const supabase = createClient();
     const router = useRouter();
 
+    async function checkSignupAvailability(selectedUsername: string, selectedEmailLower: string) {
+        try {
+            const response = await fetch(
+                `/api/profile/check?username=${encodeURIComponent(selectedUsername)}&email=${encodeURIComponent(selectedEmailLower)}`
+            );
+            const payload = await response.json().catch(() => null);
+
+            if (!response.ok || !payload?.ok) {
+                return {
+                    ok: false,
+                    error: payload?.error || "Unable to verify username or email right now.",
+                };
+            }
+
+            return {
+                ok: true,
+                emailTaken: !!payload.emailTaken,
+                usernameTaken: !!payload.usernameTaken,
+            };
+        } catch {
+            return {
+                ok: false,
+                error: "Unable to reach signup checks right now. Please try again.",
+            };
+        }
+    }
+
     function handlePhotoSelect(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -60,24 +87,21 @@ export default function Signup() {
             return;
         }
 
-        const usernameCheckResponse = await fetch(
-            `/api/profile/check?username=${encodeURIComponent(selectedUsername)}&email=${encodeURIComponent(selectedEmailLower)}`
-        );
-        const usernamePayload = await usernameCheckResponse.json().catch(() => null);
+        const availability = await checkSignupAvailability(selectedUsername, selectedEmailLower);
 
-        if (!usernameCheckResponse.ok || !usernamePayload?.ok) {
-            const reason = usernamePayload?.error || "Unable to verify username or email right now.";
+        if (!availability.ok) {
+            const reason = availability.error || "Unable to verify username or email right now.";
             console.warn('Could not verify username/email availability:', reason);
             alert(`Signup check failed. ${reason}`);
             return;
         }
 
-        if (usernamePayload.emailTaken) {
+        if (availability.emailTaken) {
             alert('An account with this email already exists. Please use another email.');
             return;
         }
 
-        if (usernamePayload.usernameTaken) {
+        if (availability.usernameTaken) {
             alert('Username is already taken. Please choose another one.');
             return;
         }
@@ -95,19 +119,28 @@ export default function Signup() {
         });
 
         if (error) {
-            console.error('Sign up error:', error.message);
-            if (
-                error.message.toLowerCase().includes("username") ||
-                error.message.toLowerCase().includes("email") ||
-                error.message.toLowerCase().includes("duplicate") ||
-                error.message.toLowerCase().includes("already registered") ||
+            console.error('Sign up error:', error.message, error.code);
+            const msg = error.message.toLowerCase();
+            if (msg.includes("database error saving new user")) {
+                // Re-check availability to give an accurate message
+                const recheck = await checkSignupAvailability(selectedUsername, selectedEmailLower);
+                if (recheck.ok && recheck.emailTaken) {
+                    alert('An account with this email already exists. Please use another email.');
+                } else if (recheck.ok && recheck.usernameTaken) {
+                    alert('Username is already taken. Please choose another one.');
+                } else {
+                    alert('Signup failed. Please try again or contact support.');
+                }
+            } else if (
+                msg.includes("username") ||
                 error.code === '23505'
             ) {
-                if (error.message.toLowerCase().includes("email")) {
-                    alert('An account with this email already exists. Please use another email.');
-                } else {
-                    alert('Username is already taken. Please choose another one.');
-                }
+                alert('Username is already taken. Please choose another one.');
+            } else if (
+                msg.includes("already registered") ||
+                msg.includes("email")
+            ) {
+                alert('An account with this email already exists. Please use another email.');
             } else {
                 alert(error.message);
             }
