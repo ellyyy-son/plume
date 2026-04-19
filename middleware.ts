@@ -80,6 +80,14 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  if (user && isPetSelectionRoute(pathname) && !shouldGoToPetSelection) {
+    const redirectResponse = NextResponse.redirect(new URL("/", request.url));
+    response.cookies.getAll().forEach((cookie) => {
+      redirectResponse.cookies.set(cookie.name, cookie.value);
+    });
+    return redirectResponse;
+  }
+
   if (user && isPublicRoute(pathname) && !shouldGoToPetSelection) {
     const redirectResponse = NextResponse.redirect(new URL("/", request.url));
     response.cookies.getAll().forEach((cookie) => {

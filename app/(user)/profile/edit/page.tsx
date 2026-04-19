@@ -57,7 +57,7 @@ export default function EditProfile() {
         if (!userId || !username.trim()) return null;
 
         const ext = file.name.split('.').pop();
-        const newPath = `${username.trim()}_profile.${ext}`;
+        const newPath = `${username.trim()}_profile_${Date.now()}.${ext}`;
 
         // Delete old file from storage if there was one
         if (storedPath) {
