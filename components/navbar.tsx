@@ -1,20 +1,15 @@
 "use client"
 
 import Link from "next/link";
-import Image from "next/image";
 import { useRouter } from 'next/navigation';
 import { createClient } from "@/utils/supabase/client";
 import { useEffect, useState } from "react";
 
-type ProfileLikeUser = { 
-  id: string; 
-  user_metadata?: Record<string, unknown>; 
+type ProfileLikeUser = {
+  id: string;
+  user_metadata?: Record<string, unknown>;
 };
 const DEFAULT_PROFILE_PIC = "/chiikawa.jpg";
-
-function getProfilePicURL(value: unknown): string {
-  return typeof value === "string" && value.trim() !== "" ? value : DEFAULT_PROFILE_PIC;
-}
 
 export default function Navbar() {
   return <FullNav />;
@@ -26,8 +21,9 @@ function FullNav() {
   const [isUser, setIsUser] = useState<boolean>(false);
   const [isReady, setIsReady] = useState(false);
   const [username, setUsername] = useState("");
-  const [dpURL, setDPURL ] = useState(DEFAULT_PROFILE_PIC)
+  const [dpURL, setDPURL] = useState(DEFAULT_PROFILE_PIC);
   const [exp, setEXP] = useState(0);
+  const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
     let mounted = true;
@@ -53,13 +49,26 @@ function FullNav() {
         }
 
         if (!mounted) return;
+
         setUsername(profileData?.username || getFallbackUsername(user) || "");
         setEXP(profileData?.exp_amount);
-        setDPURL(getProfilePicURL(profileData?.profile_pic_url));
+
+        // Convert stored path to public URL
+        const picPath = profileData?.profile_pic_url;
+        if (typeof picPath === "string" && picPath.trim() !== "") {
+          const { data: { publicUrl } } = supabase.storage
+            .from("profile_pics")
+            .getPublicUrl(picPath);
+          setDPURL(publicUrl);
+        } else {
+          setDPURL(DEFAULT_PROFILE_PIC);
+        }
+
       } catch (error) {
         console.error("PROFILE LOOKUP EXCEPTION:", error);
         if (mounted) {
           setUsername(getFallbackUsername(user) || "");
+          setDPURL(DEFAULT_PROFILE_PIC);
         }
       }
     };
@@ -126,33 +135,65 @@ function FullNav() {
   }
 
   return (
-    <div className="w-[18%] shrink-0 top-0 overflow-y-auto sticky h-screen">
-      <div className="flex flex-col bg-[#F7F9FC] shadow-sm border-r-15 border-r-[#ADD3EA] pt-8 pb-8 gap-12">
-        <div className="flex flex-col items-center font-delius gap-4">
-          <Image src={getProfilePicURL(dpURL)} width={120} height={120} alt='Profile Picture' className="rounded-full border-4 border-[#4F84A5]"/>
-          <div className="flex flex-col gap-2 items-center">
-            <p className="text-lg font-bold">{username || "user"}</p>
-            <p className="text-md font-bold rounded-2xl border-2 border-[#4F84A5]"><span className="m-4">EXP: {exp} </span></p>
+    <>
+      <button
+        onClick={() => setIsVisible(!isVisible)}
+        className="absolute top-2 left-2 z-50 p-2 rounded-md"
+      >
+        <svg
+          className="size-8 transition-transform duration-300 ease-in-out hover:stroke-[#6B9FBE]"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth="1.5"
+          stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+        </svg>
+      </button>
+
+      {isVisible && (
+        <div className="w-[18%] shrink-0 top-0 overflow-y-auto sticky h-screen">
+          <div className="flex flex-col bg-[#F7F9FC] shadow-sm border-r-15 border-r-[#ADD3EA] pt-8 pb-8 gap-5">
+            <div className="flex flex-col items-center font-delius gap-4">
+              <img
+                src={dpURL}
+                width={120}
+                height={120}
+                alt="Profile Picture"
+                className="rounded-full border-4 border-[#4F84A5] w-[120px] h-[120px] object-cover"
+              />
+              <div className="flex flex-col gap-2 items-center">
+                <p className="text-lg font-bold">{username || "user"}</p>
+                <p className="text-md font-bold rounded-2xl border-2 border-[#4F84A5]">
+                  <span className="m-4">EXP: {exp}</span>
+                </p>
+              </div>
+              <Link href="/profile/edit"><p className="text-sm">edit profile</p></Link>
+            </div>
+            <nav className="flex flex-col items-center w-full gap-4 font-delius">
+              <NavLink href="/" label="home" />
+              <NavLink href="/write" label="write entry" />
+              <NavLink href="/archive" label="journal archive" />
+              <NavLink href="/calendar" label="calendar" />
+              <NavLink href="/tasks" label="task list" />
+              <NavLink href="/shop" label="shop" />
+              <NavLink href="/dashboard" label="dashboard" />
+              <NavLink href="/inventory" label="inventory" />
+              <NavLink href="/pet-customize" label="customization" />
+            </nav>
+            <div className="flex flex-col items-center">
+              <button
+                className="font-delius py-2 px-4 bg-[#ADD3EA] border-3 border-[#5e94b67d] rounded-3xl font-bold"
+                onClick={signOut}
+              >
+                Log Out
+              </button>
+            </div>
           </div>
-          <Link href="/profile/edit"><p className="text-sm">edit profile</p></Link>
         </div>
-        <nav className="flex flex-col items-center w-full gap-4 font-delius">
-          <NavLink href="/" label="home" />
-          <NavLink href="/write" label="write entry" />
-          <NavLink href="/archive" label="journal archive" />
-          <NavLink href="/calendar" label="calendar" />
-          <NavLink href="/tasks" label="task list" />
-          <NavLink href="/" label="shop" />
-          <NavLink href="/" label="gacha" />
-          <NavLink href="/" label="dashboard" />
-          <NavLink href="/inventory" label="inventory" />
-          <NavLink href="/" label="item list" />
-        </nav>
-        <div className="flex flex-col items-center">
-          <button className="font-delius py-2 px-4 bg-[#ADD3EA] border-3 border-[#5e94b67d] rounded-3xl font-bold" onClick={signOut}>Log Out</button>
-        </div>
-      </div>
-    </div>
+      )}
+    </>
   );
 }
 
@@ -166,4 +207,3 @@ function NavLink({ href, label }: { href: string; label: string }) {
     </Link>
   );
 }
-

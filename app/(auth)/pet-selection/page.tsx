@@ -179,7 +179,7 @@ export default function PetSelectionPage() {
                 value={petName}
                 onChange={(event) => setPetName(event.target.value)}
                 placeholder="Type a name"
-                className="rounded-md border-2 border-[#E4DCAB] px-3 py-2"
+                className="rounded-md border-2 border-[#E4DCAB] px-3 py-2 font-delius"
               />
               {popupStatus && <p className="font-delius text-base text-[#2E2805]">{popupStatus}</p>}
               <button

@@ -32,7 +32,7 @@ export default function UploadButton({ onFileSelect }: UploadButtonProps) {
           bg-[#ADD3EA] text-[#163F55]
           border-none p-6 rounded-xl
           cursor-pointer text-xl
-          hover:bg-[#F0B6CF] transition-colors
+          hover:bg-[#163f5575] transition-colors
         "
       >
         <IoAdd />

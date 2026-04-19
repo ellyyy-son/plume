@@ -74,7 +74,7 @@ export default function JournalForm({ createJournal }: JournalFormProps) {
             bg-[#FBF5D1] text-[#163F55]
             border-none p-6 rounded-xl
             cursor-pointer text-xl
-            hover:bg-[#F0B6CF] transition-colors
+            hover:bg-[#ccc38dad] transition-colors
           "
         >
           <FaSave />

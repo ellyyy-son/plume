@@ -18,6 +18,17 @@ type Event = {
     notes: string;
 };
 
+type Task = {
+    id: string;
+    task_details: string;
+    is_complete: boolean;
+    created_at: string;
+    task_title: string;
+    task_deadline: string;
+    completion_datetime: string;
+    task_difficulty: string;
+};
+
 type ModalMode = "list" | "form";
 
 const CATEGORIES = ["Work", "Personal", "School", "Health", "Other"];
@@ -28,10 +39,50 @@ const CATEGORY_COLORS: Record<string, string> = {
     Health: "bg-green-200 text-green-800",
     Other: "bg-purple-200 text-purple-800",
 };
+const TASK_DIFFICULTY_COLORS: Record<string, string> = {
+    Easy: "bg-emerald-200 text-emerald-800",
+    Medium: "bg-orange-200 text-orange-800",
+    Hard: "bg-red-200 text-red-800",
+};
+
+// Parses a "yyyy-MM-dd" string as local midnight to avoid UTC off-by-one issues
+function parseLocalDate(dateStr: string): Date {
+    const d = new Date(dateStr); // correctly parses "+00" as UTC
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+function getDeadlineUrgency(deadline: string): "overdue" | "today" | "soon" | null {
+    const today = new Date();
+    const due = parseLocalDate(deadline);
+    const diffDays = Math.ceil((due.getTime() - new Date(today.setHours(0, 0, 0, 0)).getTime()) / (1000 * 60 * 60 * 24));
+    if (diffDays < 0) return "overdue";
+    if (diffDays === 0) return "today";
+    if (diffDays <= 3) return "soon";
+    return null;
+}
+
+const URGENCY_ICONS: Record<string, string> = {
+    overdue: "🚨",
+    today: "⚠️",
+    soon: "⏰",
+};
+
+const URGENCY_LABELS: Record<string, string> = {
+    overdue: "overdue",
+    today: "due today",
+    soon: "due soon",
+};
+
+const URGENCY_BADGE_COLORS: Record<string, string> = {
+    overdue: "bg-red-100 text-red-700",
+    today: "bg-orange-100 text-orange-700",
+    soon: "bg-yellow-100 text-yellow-700",
+};
 
 export default function KawaiiCalendar() {
     const [current, setCurrent] = useState(new Date());
     const [events, setEvents] = useState<Event[]>([]);
+    const [tasks, setTasks] = useState<Task[]>([]);
     const [modalMode, setModalMode] = useState<ModalMode>("list");
     const [modal, setModal] = useState<{ open: boolean; date: Date | null }>({ open: false, date: null });
     const [form, setForm] = useState({ name: "", time: "12:00", category: "Work", notes: "" });
@@ -60,7 +111,33 @@ export default function KawaiiCalendar() {
     useEffect(() => {
         if (!user_id) return;
         getEventsForMonth();
+        getTasks();
     }, [user_id, current]);
+
+    async function getTasks() {
+        const { data, error } = await supabase
+            .from('task')
+            .select('*')
+            .eq('user_id', user_id);
+
+        if (error) {
+            console.error('Get Tasks Error:', error.message);
+            return;
+        }
+
+        const loaded: Task[] = data.map(row => ({
+            id: row.id.toString(),
+            task_details: row.task_details,
+            is_complete: row.is_complete,
+            created_at: row.created_at,
+            task_title: row.task_title,
+            task_deadline: row.task_deadline,
+            completion_datetime: row.completion_datetime,
+            task_difficulty: row.task_difficulty,
+        }));
+
+        setTasks(loaded);
+    }
 
     async function getEventsForMonth() {
         const monthStart = format(startOfMonth(current), "yyyy-MM-dd");
@@ -81,7 +158,7 @@ export default function KawaiiCalendar() {
         const loaded: Event[] = data.map(row => ({
             id: row.event_id.toString(),
             name: row.event_name,
-            date: new Date(row.event_date),
+            date: parseLocalDate(row.event_date),
             time: row.event_time ?? "12:00",
             category: row.event_category,
             notes: row.notes ?? "",
@@ -191,17 +268,28 @@ export default function KawaiiCalendar() {
         ? events.filter(e => isSameDay(e.date, modal.date!))
         : [];
 
+    const selectedDayTasks = modal.date
+        ? tasks.filter(t =>
+            t.task_deadline && isSameDay(parseLocalDate(t.task_deadline), modal.date!)
+        )
+        : [];
+
     return (
         <div className="min-h-screen items-center justify-center bg-[#F0B6CF] py-6 px-12">
             {/* Title */}
-                <h1 className="font-cherry text-6xl text-center tracking-widest text-[#2E2805] drop-shadow-lg drop-shadow-black/20 p-8">
-                    CALENDAR
-                </h1>
+            <h1 className="font-cherry text-6xl text-center tracking-widest text-[#2E2805] drop-shadow-lg drop-shadow-black/20 p-8">
+                CALENDAR
+            </h1>
             <div className="rounded-3xl w-full max-w-5xl shadow-xl shadow-black/20 overflow-hidden font-delius bg-[#CCC38D]">
                 <div className="bg-[#CCC38D]">
                     {/* Header */}
                     <div className="flex flex-row items-center px-6 py-6">
-                        <div className="flex-1" />
+                        <div className="flex-1 flex justify-start">
+                            <button
+                                onClick={() => setCurrent(addMonths(current, -1))}
+                                className="bg-transparent border-2 border-white rounded-full w-12 h-12 flex items-center justify-center font-bold text-xl text-white hover:bg-[#92cbee] transition-colors"
+                            >←</button>
+                        </div>
                         <div className="flex flex-row gap-x-8 text-lg">
                             <CustomSelect
                                 value={format(current, "MMMM")}
@@ -225,25 +313,40 @@ export default function KawaiiCalendar() {
                         <div className="flex-1 flex justify-end">
                             <button
                                 onClick={() => setCurrent(addMonths(current, 1))}
-                                className="bg-transparent border-2 border-white rounded-full w-12 h-12 me-6 flex items-center justify-center font-bold text-xl text-white hover:bg-[#92cbee] transition-colors"
+                                className="bg-transparent border-2 border-white rounded-full w-12 h-12 flex items-center justify-center font-bold text-xl text-white hover:bg-[#92cbee] transition-colors"
                             >→</button>
                         </div>
                     </div>
 
-                    {/* Day labels — reverted to original */}
+                    {/* Day labels */}
                     <div className="grid grid-cols-7 bg-[#ADD3EA] text-center text-lg font-bold text-[#2E2805] py-6 px-6 rounded-t-xl shadow-md border-y-2 border-[#719db8]">
                         {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(d => (
                             <div key={d}>{d}</div>
                         ))}
                     </div>
 
-                    {/* Grid + cat wrapper */}
+                    {/* Grid */}
                     <div className="relative bg-[#FBF5D1]">
                         <div className="grid grid-cols-7 place-content-center px-6 gap-y-2 pt-4 pb-24">
                             {days.map(day => {
                                 const isToday = isSameDay(day, new Date());
                                 const inMonth = isSameMonth(day, current);
                                 const dayEvents = events.filter(e => isSameDay(e.date, day));
+                                const dayTasks = tasks.filter(t =>
+                                    t.task_deadline && isSameDay(parseLocalDate(t.task_deadline), day)
+                                );
+                                const allItems = [...dayEvents, ...dayTasks];
+
+                                // Highest urgency icon for the cell
+                                const urgencies = dayTasks
+                                    .filter(t => !t.is_complete && t.task_deadline)
+                                    .map(t => getDeadlineUrgency(t.task_deadline))
+                                    .filter(Boolean);
+                                const topUrgency = urgencies.includes("overdue") ? "overdue"
+                                    : urgencies.includes("today") ? "today"
+                                        : urgencies.includes("soon") ? "soon"
+                                            : null;
+
                                 return (
                                     <div
                                         key={day.toISOString()}
@@ -252,15 +355,26 @@ export default function KawaiiCalendar() {
                                             w-full h-[100px] p-1 cursor-pointer transition-colors
                                             ${inMonth ? "opacity-100" : "opacity-40"}`}
                                     >
-                                        <div className={`text-2xl font-black flex justify-center items-center
-                                            w-12 h-12 rounded-2xl transition-colors tracking-tight
-                                            ${isToday
-                                                ? "bg-blue-200 text-[#2E2805] shadow-md shadow-blue-950/10"
-                                                : "text-[#2E2805] hover:bg-[#bfba9ba4]"
-                                            }`}
-                                        >
-                                            {format(day, "d")}
+                                        {/* Date number + urgency icon */}
+                                        <div className="relative">
+                                            <div className={`text-2xl font-black flex justify-center items-center
+                                                w-12 h-12 rounded-2xl transition-colors tracking-tight
+                                                ${isToday
+                                                    ? "bg-blue-200 text-[#2E2805] shadow-md shadow-blue-950/10"
+                                                    : "text-[#2E2805] hover:bg-[#bfba9ba4]"
+                                                }`}
+                                            >
+                                                {format(day, "d")}
+                                            </div>
+                                            {/* Urgency icon badge on top-right of date */}
+                                            {topUrgency && (
+                                                <span className="absolute -top-2 -right-3 text-[20px] leading-none">
+                                                    {URGENCY_ICONS[topUrgency]}
+                                                </span>
+                                            )}
                                         </div>
+
+                                        {/* Events */}
                                         {dayEvents.slice(0, 2).map(ev => (
                                             <div
                                                 key={ev.id}
@@ -270,9 +384,27 @@ export default function KawaiiCalendar() {
                                                 {ev.name}
                                             </div>
                                         ))}
-                                        {dayEvents.length > 2 && (
+
+                                        {/* Tasks filling remaining slots */}
+                                        {dayEvents.length < 2 && dayTasks.slice(0, 2 - dayEvents.length).map(t => {
+                                            const urgency = t.is_complete ? null : getDeadlineUrgency(t.task_deadline);
+                                            return (
+                                                <div
+                                                    key={t.id}
+                                                    className={`mt-0.5 text-[11px] font-semibold tracking-wide rounded px-1 truncate w-full text-center shadow-sm
+                                                        ${t.is_complete
+                                                            ? "bg-gray-200 text-gray-500 line-through"
+                                                            : (TASK_DIFFICULTY_COLORS[t.task_difficulty] ?? "bg-orange-200 text-orange-800")
+                                                        }`}
+                                                >
+                                                    {t.task_title}
+                                                </div>
+                                            );
+                                        })}
+
+                                        {allItems.length > 2 && (
                                             <div className="text-[10px] font-medium text-[#2e2805a8] mt-0.5">
-                                                +{dayEvents.length - 2} more
+                                                +{allItems.length - 2} more
                                             </div>
                                         )}
                                     </div>
@@ -282,10 +414,7 @@ export default function KawaiiCalendar() {
 
                         {/* Cat — bottom right */}
                         <div className="absolute bottom-2 right-4 z-10">
-                            <img
-                                src="/animal_placeholder.png"
-                                className="w-28 h-28 object-contain"
-                            />
+                            <img src="/animal_placeholder.png" className="w-28 h-28 object-contain" />
                         </div>
                     </div>
                 </div>
@@ -305,13 +434,13 @@ export default function KawaiiCalendar() {
                                         <button onClick={closeModal} className="text-gray-400 hover:text-gray-600 text-xl">✕</button>
                                     </div>
 
+                                    {/* Events */}
                                     {selectedDayEvents.length === 0 ? (
-                                        <p className="text-sm font-medium text-[#2e2805a8] text-center py-4">No events yet.</p>
+                                        <p className="text-sm font-medium text-[#2e2805a8] text-center py-2">No events yet.</p>
                                     ) : (
-                                        <ul className="space-y-2 max-h-64 overflow-y-auto">
+                                        <ul className="space-y-2 max-h-48 overflow-y-auto">
                                             {selectedDayEvents.map(ev => (
-                                                <li key={ev.id}
-                                                    className="bg-white px-4 py-3 flex items-start justify-between gap-2">
+                                                <li key={ev.id} className="bg-white px-4 py-3 flex items-start justify-between gap-2">
                                                     <div className="flex-1 min-w-0">
                                                         <div className="flex items-center gap-2">
                                                             <span className={`text-[10px] font-bold tracking-wide uppercase px-2 py-0.5 shadow-sm rounded-full ${CATEGORY_COLORS[ev.category]}`}>
@@ -335,6 +464,45 @@ export default function KawaiiCalendar() {
                                                 </li>
                                             ))}
                                         </ul>
+                                    )}
+
+                                    {/* Tasks due */}
+                                    {selectedDayTasks.length > 0 && (
+                                        <div>
+                                            <p className="text-xs font-extrabold tracking-widest uppercase text-[#2e2805a8] mb-1">Tasks Due</p>
+                                            <ul className="space-y-2 max-h-40 overflow-y-auto">
+                                                {selectedDayTasks.map(t => {
+                                                    const urgency = t.is_complete ? null : getDeadlineUrgency(t.task_deadline);
+                                                    return (
+                                                        <li key={t.id} className="bg-white px-4 py-3 flex items-start gap-2">
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="flex items-center gap-2 flex-wrap">
+                                                                    <span className={`text-[10px] font-bold tracking-wide uppercase px-2 py-0.5 shadow-sm rounded-full
+                                                                        ${TASK_DIFFICULTY_COLORS[t.task_difficulty] ?? "bg-orange-200 text-orange-800"}`}>
+                                                                        {t.task_difficulty}
+                                                                    </span>
+                                                                    {urgency && (
+                                                                        <span className={`text-[10px] font-bold tracking-wide uppercase px-2 py-0.5 shadow-sm rounded-full
+                                                                            ${URGENCY_BADGE_COLORS[urgency]}`}>
+                                                                            {URGENCY_ICONS[urgency]} {URGENCY_LABELS[urgency]}
+                                                                        </span>
+                                                                    )}
+                                                                    {t.is_complete && (
+                                                                        <span className="text-[10px] font-bold tracking-wide uppercase px-2 py-0.5 shadow-sm rounded-full bg-gray-200 text-gray-500">
+                                                                            ✓ done
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <p className={`font-black tracking-tight text-[#2e2805] text-sm mt-1 truncate
+                                                                    ${t.is_complete ? "line-through opacity-50" : ""}`}>
+                                                                    {t.task_title}
+                                                                </p>
+                                                            </div>
+                                                        </li>
+                                                    );
+                                                })}
+                                            </ul>
+                                        </div>
                                     )}
 
                                     <button
