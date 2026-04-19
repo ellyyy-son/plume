@@ -18,7 +18,7 @@ export default function FilterButtons({ currentFilter }: FilterButtonsProps) {
   }
 
   return (
-    <div className='flex flex-row gap-4 px-4 translate-y-11'>
+    <div className='flex flex-row gap-2 px-4 translate-y-11'>
       <button 
         onClick={() => setFilter('daily')}
         className={`font-delius p-4 border-3 border-[#8FBCD6] rounded-xl font-bold ${
