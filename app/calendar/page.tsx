@@ -411,11 +411,6 @@ export default function KawaiiCalendar() {
                                 );
                             })}
                         </div>
-
-                        {/* Cat — bottom right */}
-                        <div className="absolute bottom-2 right-4 z-10">
-                            <img src="/animal_placeholder.png" className="w-28 h-28 object-contain" />
-                        </div>
                     </div>
                 </div>
 
