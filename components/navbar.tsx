@@ -113,9 +113,17 @@ function FullNav() {
       setIsReady(true);
     });
 
+    const onExpUpdated = (e: Event) => {
+      const detail = (e as CustomEvent<{ exp: number }>).detail;
+      if (mounted) setEXP(detail.exp);
+    };
+
+    window.addEventListener("exp-updated", onExpUpdated);
+
     return () => {
       mounted = false;
       authListener.subscription.unsubscribe();
+      window.removeEventListener("exp-updated", onExpUpdated);
     };
   }, [supabase]);
 
@@ -184,6 +192,7 @@ function FullNav() {
               <NavLink href="/dashboard" label="dashboard" />
               <NavLink href="/inventory" label="inventory" />
               <NavLink href="/pet-customize" label="customization" />
+              <NavLink href="/milestone" label="milestones" />
               <NavLink href="/notification" label="notification" />
             </nav>
             <div className="flex flex-col items-center">

@@ -152,6 +152,8 @@ export default function TaskListClient({
       return
     }
 
+    window.dispatchEvent(new CustomEvent("exp-updated", { detail: { exp: newExp } }))
+
     const { error } = await supabase
       .from("task")
       .update({
