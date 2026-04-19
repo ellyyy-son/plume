@@ -43,6 +43,7 @@ export default function PetChatClient({
   slots: SlotRow[];
 }) {
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
+  const [cooldownRemaining, setCooldownRemaining] = useState(0);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "welcome",
@@ -64,6 +65,16 @@ export default function PetChatClient({
     });
   }, [messages, isSending]);
 
+  useEffect(() => {
+    if (cooldownRemaining <= 0) return;
+
+    const timeoutId = window.setTimeout(() => {
+      setCooldownRemaining((current) => Math.max(0, current - 1));
+    }, 1000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [cooldownRemaining]);
+
   function buildHistory(nextUserMessage: Message) {
     return [...messages, nextUserMessage].slice(-8).map((message) => ({
       role: message.role === "pet" ? "assistant" : "user",
@@ -75,7 +86,7 @@ export default function PetChatClient({
     event.preventDefault();
 
     const trimmedInput = input.trim();
-    if (!trimmedInput || isSending) return;
+    if (!trimmedInput || isSending || cooldownRemaining > 0) return;
 
     const userMessage: Message = {
       id: crypto.randomUUID(),
@@ -87,6 +98,7 @@ export default function PetChatClient({
     setInput("");
     setError("");
     setIsSending(true);
+    setCooldownRemaining(10);
 
     try {
       const history = buildHistory(userMessage);
@@ -205,20 +217,30 @@ export default function PetChatClient({
           <p className="mt-4 font-delius text-sm text-[#9f2f2f]">{error}</p>
         )}
 
+        {cooldownRemaining > 0 && (
+          <p className="mt-2 font-delius text-sm text-[#6B5622]">
+            You can send another message in {cooldownRemaining}s.
+          </p>
+        )}
+
         <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-3 sm:flex-row">
           <input
             value={input}
             onChange={(event) => setInput(event.target.value)}
             placeholder={`Say something to ${petName}`}
             className="min-w-0 flex-1 rounded-2xl border-2 border-[#E4DCAB] px-4 py-3 font-delius text-[#2E2805] outline-none"
-            disabled={isSending}
+            disabled={isSending || cooldownRemaining > 0}
           />
           <button
             type="submit"
-            disabled={isSending || !input.trim()}
+            disabled={isSending || cooldownRemaining > 0 || !input.trim()}
             className="rounded-2xl bg-[#C17F9E] px-6 py-3 font-delius text-white disabled:opacity-50"
           >
-            {isSending ? "Waiting..." : "Send"}
+            {isSending
+              ? "Waiting..."
+              : cooldownRemaining > 0
+              ? `Wait ${cooldownRemaining}s`
+              : "Send"}
           </button>
         </form>
       </section>
