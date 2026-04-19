@@ -146,7 +146,7 @@ export default function Page() {
         <h1 className="font-cherry text-5xl text-[#2E2805] text-center mb-4">Welcome Home</h1>
         <div className="text-center font-delius text-xl text-[#2E2805] mb-6">
           <p>
-            <Link href="/journal" className="underline hover:text-[#C17F9E]">Go to Journal</Link>
+            <Link href="/write" className="underline hover:text-[#C17F9E]">Go to Journal</Link>
           </p>
           <p>
             <Link href="/tasks" className="underline hover:text-[#C17F9E]">Go to Tasks</Link>

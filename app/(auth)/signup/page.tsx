@@ -1,6 +1,6 @@
 "use client"
 import { createClient } from '@/utils/supabase/client';
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link';
 
@@ -11,8 +11,49 @@ export default function Signup() {
     const [password, setPassword] = useState('');
     const [name, setName] = useState('');
     const [username, setUsername] = useState('');
+    const [profilePicPreview, setProfilePicPreview] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const supabase = createClient();
     const router = useRouter();
+
+    async function checkSignupAvailability(selectedUsername: string, selectedEmailLower: string) {
+        try {
+            const response = await fetch(
+                `/api/profile/check?username=${encodeURIComponent(selectedUsername)}&email=${encodeURIComponent(selectedEmailLower)}`
+            );
+            const payload = await response.json().catch(() => null);
+
+            if (!response.ok || !payload?.ok) {
+                return {
+                    ok: false,
+                    error: payload?.error || "Unable to verify username or email right now.",
+                };
+            }
+
+            return {
+                ok: true,
+                emailTaken: !!payload.emailTaken,
+                usernameTaken: !!payload.usernameTaken,
+            };
+        } catch {
+            return {
+                ok: false,
+                error: "Unable to reach signup checks right now. Please try again.",
+            };
+        }
+    }
+
+    function handlePhotoSelect(e: React.ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setProfilePicPreview(URL.createObjectURL(file));
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            const base64 = ev.target?.result as string;
+            localStorage.setItem('pending_profile_pic', JSON.stringify({ base64, name: file.name, type: file.type }));
+        };
+        reader.readAsDataURL(file);
+    }
 
     async function signUpNewUser() {
         const selectedUsername = username.trim();
@@ -46,24 +87,21 @@ export default function Signup() {
             return;
         }
 
-        const usernameCheckResponse = await fetch(
-            `/api/profile/check?username=${encodeURIComponent(selectedUsername)}&email=${encodeURIComponent(selectedEmailLower)}`
-        );
-        const usernamePayload = await usernameCheckResponse.json().catch(() => null);
+        const availability = await checkSignupAvailability(selectedUsername, selectedEmailLower);
 
-        if (!usernameCheckResponse.ok || !usernamePayload?.ok) {
-            const reason = usernamePayload?.error || "Unable to verify username or email right now.";
+        if (!availability.ok) {
+            const reason = availability.error || "Unable to verify username or email right now.";
             console.warn('Could not verify username/email availability:', reason);
             alert(`Signup check failed. ${reason}`);
             return;
         }
 
-        if (usernamePayload.emailTaken) {
+        if (availability.emailTaken) {
             alert('An account with this email already exists. Please use another email.');
             return;
         }
 
-        if (usernamePayload.usernameTaken) {
+        if (availability.usernameTaken) {
             alert('Username is already taken. Please choose another one.');
             return;
         }
@@ -81,19 +119,28 @@ export default function Signup() {
         });
 
         if (error) {
-            console.error('Sign up error:', error.message);
-            if (
-                error.message.toLowerCase().includes("username") ||
-                error.message.toLowerCase().includes("email") ||
-                error.message.toLowerCase().includes("duplicate") ||
-                error.message.toLowerCase().includes("already registered") ||
+            console.error('Sign up error:', error.message, error.code);
+            const msg = error.message.toLowerCase();
+            if (msg.includes("database error saving new user")) {
+                // Re-check availability to give an accurate message
+                const recheck = await checkSignupAvailability(selectedUsername, selectedEmailLower);
+                if (recheck.ok && recheck.emailTaken) {
+                    alert('An account with this email already exists. Please use another email.');
+                } else if (recheck.ok && recheck.usernameTaken) {
+                    alert('Username is already taken. Please choose another one.');
+                } else {
+                    alert('Signup failed. Please try again or contact support.');
+                }
+            } else if (
+                msg.includes("username") ||
                 error.code === '23505'
             ) {
-                if (error.message.toLowerCase().includes("email")) {
-                    alert('An account with this email already exists. Please use another email.');
-                } else {
-                    alert('Username is already taken. Please choose another one.');
-                }
+                alert('Username is already taken. Please choose another one.');
+            } else if (
+                msg.includes("already registered") ||
+                msg.includes("email")
+            ) {
+                alert('An account with this email already exists. Please use another email.');
             } else {
                 alert(error.message);
             }
@@ -115,11 +162,18 @@ export default function Signup() {
                 e.preventDefault();
                 signUpNewUser();
             }}>
-                <div className="mt-4 gap-x-3 justify-items-center">
-                    <svg viewBox="0 0 24 24" fill="currentColor" data-slot="icon" aria-hidden="true" className="size-30 text-gray-500">
-                    <path d="M18.685 19.097A9.723 9.723 0 0 0 21.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12a9.723 9.723 0 0 0 3.065 7.097A9.716 9.716 0 0 0 12 21.75a9.716 9.716 0 0 0 6.685-2.653Zm-12.54-1.285A7.486 7.486 0 0 1 12 15a7.486 7.486 0 0 1 5.855 2.812A8.224 8.224 0 0 1 12 20.25a8.224 8.224 0 0 1-5.855-2.438ZM15.75 9a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" clipRule="evenodd" fillRule="evenodd" />
-                    </svg>
-                    <button type="button" className="font-delius rounded-md bg-white/10 px-3 py-2 text-sm font-semibold text-[#2E2805] inset-ring inset-ring-white/5 hover:bg-[#F0B6CF]/50">upload photo</button>
+                <div className="mt-4 gap-y-2 flex flex-col justify-center items-center">
+                    {profilePicPreview ? (
+                        <img src={profilePicPreview} alt="Profile preview" className="rounded-full w-25 h-25 object-cover" />
+                    ) : (
+                        <svg viewBox="0 0 24 24" fill="currentColor" data-slot="icon" aria-hidden="true" className="size-25 text-gray-400">
+                            <path d="M18.685 19.097A9.723 9.723 0 0 0 21.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12a9.723 9.723 0 0 0 3.065 7.097A9.716 9.716 0 0 0 12 21.75a9.716 9.716 0 0 0 6.685-2.653Zm-12.54-1.285A7.486 7.486 0 0 1 12 15a7.486 7.486 0 0 1 5.855 2.812A8.224 8.224 0 0 1 12 20.25a8.224 8.224 0 0 1-5.855-2.438ZM15.75 9a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" clipRule="evenodd" fillRule="evenodd" />
+                        </svg>
+                    )}
+                    <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoSelect} />
+                    <button type="button" onClick={() => fileInputRef.current?.click()} className="font-delius rounded-md bg-white/10 px-3 py-2 text-sm font-semibold text-[#2E2805] inset-ring inset-ring-white/5 hover:bg-[#F0B6CF]/50">
+                        {profilePicPreview ? 'change photo' : 'upload photo'}
+                    </button>
                 </div>
 
                 {/* name text area */}

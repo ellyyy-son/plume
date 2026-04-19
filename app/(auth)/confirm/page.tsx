@@ -50,6 +50,30 @@ export default function Confirm() {
         return;
       }
 
+      const stored = localStorage.getItem('pending_profile_pic');
+      if (stored) {
+        try {
+          const { base64, name: fileName, type } = JSON.parse(stored);
+          const res = await fetch(base64);
+          const blob = await res.blob();
+          const file = new File([blob], fileName, { type });
+          const ext = fileName.split('.').pop();
+          const uname = typeof userData.user.user_metadata?.username === 'string'
+            ? userData.user.user_metadata.username.trim()
+            : userData.user.id;
+          const path = `${uname}_profile.${ext}`;
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('profile_pics')
+            .upload(path, file, { upsert: true, contentType: type });
+          if (!uploadError && uploadData) {
+            await supabase.from('profile').update({ profile_pic_url: uploadData.path }).eq('user_id', userData.user.id);
+          }
+          localStorage.removeItem('pending_profile_pic');
+        } catch (e) {
+          console.error('Profile pic upload failed:', e);
+        }
+      }
+
       setIsConfirmed(true);
       setStatus("Profile ready. Redirecting to pet selection...");
       setTimeout(() => router.replace("/pet-selection"), 1000);
