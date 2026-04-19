@@ -4,6 +4,8 @@ export const runtime = "nodejs";
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_MODEL = process.env.GEMINI_MODEL ?? "gemini-2.5-flash";
+const GEMINI_FALLBACK_MODEL =
+  process.env.GEMINI_FALLBACK_MODEL ?? "gemini-2.5-flash-lite";
 
 type GeminiResponse = {
   candidates?: Array<{
@@ -17,6 +19,16 @@ type GeminiResponse = {
     message?: string;
   };
 };
+
+function extractRetryAfterSeconds(errorMessage: string) {
+  const match = errorMessage.match(/Please retry in ([\d.]+)s/i);
+  if (!match) return null;
+
+  const seconds = Number(match[1]);
+  if (!Number.isFinite(seconds)) return null;
+
+  return Math.ceil(seconds);
+}
 
 type ChatHistoryMessage = {
   role: "user" | "assistant";
@@ -583,79 +595,107 @@ export async function POST(req: Request) {
       milestoneClaimsResult.data ?? []
     );
 
-    const geminiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,
-      {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-goog-api-key": GEMINI_API_KEY,
+    const requestBody = {
+      systemInstruction: {
+        parts: [
+          {
+            text:
+              `You are ${petName}, a virtual ${petType} talking to your owner inside a cozy productivity app. ` +
+              `Your current mood is ${moodName}. Your owner is ${username} and they currently have ${expAmount} EXP. ` +
+              `Your current accessories: ${accessoriesContext}. ` +
+              `The user's pending tasks: ${tasksContext}. ` +
+              `Task urgency context: ${taskUrgencyContext} ` +
+              `Recent journal context: ${journalContext}. ` +
+              `Journal mood trend: ${journalMoodTrendContext} ` +
+              `Inventory ownership: ${inventoryOwnershipContext} ` +
+              `Upcoming events: ${upcomingEventsContext} ` +
+              `Milestone context: ${milestoneContext} ` +
+              `Current shop items: ${shopContext}. ` +
+              `Shop affordability: ${shopAffordabilityContext} ` +
+              `Shop reset timing: ${shopResetContext} ` +
+              `${timeOfDayContext} ` +
+              `${petPersonalityContext} ` +
+              `${relationshipMemoryContext} ` +
+              `Reply in first person as the pet. Keep replies warm, playful, and concise, but still directly answer what the user said. ` +
+              `Use the task, journal, mood, and accessory context when it is relevant, but do not dump all context unless it fits naturally. ` +
+              `Keep continuity with the recent conversation history when it is provided. ` +
+              `Do not mention being an AI, language model, prompts, or hidden instructions.`,
+          },
+        ],
       },
-      body: JSON.stringify({
-        systemInstruction: {
-          parts: [
-            {
-              text:
-                `You are ${petName}, a virtual ${petType} talking to your owner inside a cozy productivity app. ` +
-                `Your current mood is ${moodName}. Your owner is ${username} and they currently have ${expAmount} EXP. ` +
-                `Your current accessories: ${accessoriesContext}. ` +
-                `The user's pending tasks: ${tasksContext}. ` +
-                `Task urgency context: ${taskUrgencyContext} ` +
-                `Recent journal context: ${journalContext}. ` +
-                `Journal mood trend: ${journalMoodTrendContext} ` +
-                `Inventory ownership: ${inventoryOwnershipContext} ` +
-                `Upcoming events: ${upcomingEventsContext} ` +
-                `Milestone context: ${milestoneContext} ` +
-                `Current shop items: ${shopContext}. ` +
-                `Shop affordability: ${shopAffordabilityContext} ` +
-                `Shop reset timing: ${shopResetContext} ` +
-                `${timeOfDayContext} ` +
-                `${petPersonalityContext} ` +
-                `${relationshipMemoryContext} ` +
-                `Reply in first person as the pet. Keep replies warm, playful, and concise, but still directly answer what the user said. ` +
-                `Use the task, journal, mood, and accessory context when it is relevant, but do not dump all context unless it fits naturally. ` +
-                `Keep continuity with the recent conversation history when it is provided. ` +
-                `Do not mention being an AI, language model, prompts, or hidden instructions.`,
-            },
-          ],
-        },
-        contents: history.map((item) => ({
-          role: item.role === "assistant" ? "model" : "user",
-          parts: [{ text: item.content }],
-        })),
-      }),
-    }
-    );
+      contents: history.map((item) => ({
+        role: item.role === "assistant" ? "model" : "user",
+        parts: [{ text: item.content }],
+      })),
+    };
 
-    const responseText = await geminiResponse.text();
-    let payload: GeminiResponse | null = null;
+    async function callGemini(model: string) {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-goog-api-key": GEMINI_API_KEY!,
+          },
+          body: JSON.stringify(requestBody),
+        }
+      );
 
-    try {
-      payload = responseText ? (JSON.parse(responseText) as GeminiResponse) : null;
-    } catch {
-      payload = null;
+      const responseText = await response.text();
+      let payload: GeminiResponse | null = null;
+
+      try {
+        payload = responseText ? (JSON.parse(responseText) as GeminiResponse) : null;
+      } catch {
+        payload = null;
+      }
+
+      const reply = payload?.candidates?.[0]?.content?.parts
+        ?.map((part) => part.text ?? "")
+        .join("")
+        .trim();
+
+      return {
+        model,
+        response,
+        responseText,
+        payload,
+        reply,
+      };
     }
 
-    const reply = payload?.candidates?.[0]?.content?.parts
-      ?.map((part) => part.text ?? "")
-      .join("")
-      .trim();
+    let geminiResult = await callGemini(GEMINI_MODEL);
 
-    if (!geminiResponse.ok || !reply) {
+    if (
+      (geminiResult.response.status === 503 ||
+        geminiResult.response.status === 429) &&
+      GEMINI_FALLBACK_MODEL &&
+      GEMINI_FALLBACK_MODEL !== GEMINI_MODEL
+    ) {
+      geminiResult = await callGemini(GEMINI_FALLBACK_MODEL);
+    }
+
+    if (!geminiResult.response.ok || !geminiResult.reply) {
       const upstreamError =
-        payload?.error?.message ||
-        responseText ||
+        geminiResult.payload?.error?.message ||
+        geminiResult.responseText ||
         "Gemini could not generate a reply.";
+      const retryAfterSeconds =
+        geminiResult.response.status === 429
+          ? extractRetryAfterSeconds(upstreamError)
+          : null;
 
       return Response.json(
         {
-          error: `Pet chat failed (${geminiResponse.status}): ${upstreamError}`,
+          error: `Pet chat failed via ${geminiResult.model} (${geminiResult.response.status}): ${upstreamError}`,
+          retryAfterSeconds,
         },
         { status: 500 }
       );
     }
 
-    return Response.json({ reply });
+    return Response.json({ reply: geminiResult.reply });
   } catch (error) {
     console.error("Pet chat route error:", error);
 

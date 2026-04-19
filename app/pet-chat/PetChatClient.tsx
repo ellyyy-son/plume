@@ -114,17 +114,30 @@ export default function PetChatClient({
       });
 
       const responseText = await response.text();
-      let payload: { reply?: string; error?: string } | null = null;
+      let payload:
+        | { reply?: string; error?: string; retryAfterSeconds?: number | null }
+        | null = null;
 
       try {
         payload = responseText
-          ? ((JSON.parse(responseText) as { reply?: string; error?: string }) ?? null)
+          ? ((JSON.parse(responseText) as {
+              reply?: string;
+              error?: string;
+              retryAfterSeconds?: number | null;
+            }) ?? null)
           : null;
       } catch {
         payload = null;
       }
 
       if (!response.ok || !payload?.reply) {
+        if (
+          typeof payload?.retryAfterSeconds === "number" &&
+          payload.retryAfterSeconds > 0
+        ) {
+          setCooldownRemaining(payload.retryAfterSeconds);
+        }
+
         throw new Error(
           payload?.error ||
             responseText ||
