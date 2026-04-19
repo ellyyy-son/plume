@@ -207,9 +207,9 @@ export default function UserDashboard() {
           </div>
 
         {/* Streak */}
-          <div className="flex flex-col gap-8 mt-5 bg-white shadow-md py-6 px-6 rounded-xl">
+          <div className="flex flex-col gap-8 mt-5 bg-[#ADD3EA] shadow-md py-6 px-6 rounded-xl">
             <h3 className="text-3xl mb-3">🔥 Streak</h3>
-            <div className="col-span-2 bg-[#ADD3EA] shadow-md p-6 rounded-xl">
+            <div className="col-span-2 bg-white shadow-md p-6 rounded-xl">
               <p className="text-2xl place-self-center">Current: {streak?.currentStreak} days</p>
             </div>
 
