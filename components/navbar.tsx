@@ -173,6 +173,7 @@ function FullNav() {
             </div>
             <nav className="flex flex-col items-center w-full gap-4 font-delius">
               <NavLink href="/" label="home" />
+              <NavLink href="/dashboard" label="dashboard" />
               <NavLink href="/write" label="write entry" />
               <NavLink href="/archive" label="journal archive" />
               <NavLink href="/calendar" label="calendar" />
@@ -181,6 +182,7 @@ function FullNav() {
               <NavLink href="/dashboard" label="dashboard" />
               <NavLink href="/inventory" label="inventory" />
               <NavLink href="/pet-customize" label="customization" />
+              <NavLink href="/notification" label="notification" />
             </nav>
             <div className="flex flex-col items-center">
               <button
