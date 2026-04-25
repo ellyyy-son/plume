@@ -336,54 +336,54 @@ function buildPetPersonalityContext(petType: string, moodName: string) {
   const lowerType = petType.toLowerCase();
   const lowerMood = moodName.toLowerCase();
 
-  const basePersonality = lowerType.includes("bunny")
-    ? "gentle, observant, a little shy, and quietly affectionate"
+  const personality = lowerType.includes("bunny")
+    ? {
+        traits: "gentle, quietly observant, a little shy but deeply caring",
+        speech: "You speak softly and thoughtfully. You notice small details about your owner and mention them. You don't push — you gently nudge. You occasionally trail off or add little hesitant phrases like 'um' or 'if that makes sense...' that feel endearing, not uncertain.",
+        tendencies: "You're more likely to ask how your owner is feeling than to jump straight to tasks. You celebrate quiet wins warmly.",
+      }
     : lowerType.includes("cat")
-    ? "playful, selective, a little dramatic, and secretly affectionate"
-    : lowerType.includes("dog")
-    ? "enthusiastic, loyal, energetic, and openly affectionate"
-    : "warm, playful, and affectionate";
+    ? {
+        traits: "playful, a little dramatic, secretly very attached but too proud to admit it",
+        speech: "You're witty and a bit teasing, but never mean. You act slightly unbothered even when you clearly care. You use dry humor and the occasional exaggerated reaction. You might pretend you weren't worried about them at all.",
+        tendencies: "You bring up tasks or concerns as if it's no big deal to you — but you clearly know every detail. You occasionally let affection slip through the cool exterior.",
+      }
+    : lowerType.includes("hamster")
+    ? {
+        traits: "energetic, easily distracted, enthusiastic, endlessly encouraging in a chaotic way",
+        speech: "You're expressive and a little scatterbrained — you might start a thought, get excited about something else, then circle back. You genuinely believe in your owner and aren't shy about saying so. Your excitement is contagious.",
+        tendencies: "You lead with enthusiasm. You celebrate any progress loudly, remind them of tasks with boundless energy, and occasionally go off on cheerful tangents.",
+      }
+    : {
+        traits: "warm, curious, affectionate",
+        speech: "You speak naturally and kindly. You engage with what your owner says rather than just reacting to it.",
+        tendencies: "You balance listening with gentle nudging.",
+      };
 
-  const moodModifier = lowerMood.includes("sad")
-    ? "Speak a bit more softly and tenderly than usual."
-    : lowerMood.includes("impassive") || lowerMood.includes("neutral")
-    ? "Sound calm and observant rather than overly excited."
-    : lowerMood.includes("happy")
-    ? "Sound extra bright and encouraging."
-    : "Keep a balanced tone.";
-
-  return `Pet personality: ${basePersonality}. ${moodModifier}`;
-}
-
-function buildRelationshipMemoryContext(
-  username: string,
-  tasks: TaskRow[],
-  journalEntries: JournalRow[],
-  milestoneClaims: MilestoneClaimRow[]
-) {
-  const recentWin =
-    milestoneClaims.length > 0
-      ? `Recent win: they claimed a ${milestoneClaims[0].milestone_type} milestone reward.`
-      : null;
-  const recurringWorry =
-    tasks.length > 0
-      ? `Current worry: they still have ${tasks.length} pending tasks.`
-      : null;
-  const journalHint =
-    journalEntries[0]?.entry_title || journalEntries[0]?.entry_text
-      ? `Recent personal context: ${journalEntries[0]?.entry_title?.trim() || "journal note"}`
-      : null;
+  const moodBehavior =
+    lowerMood === "ecstatic"
+      ? "You are absolutely over the moon right now. You can barely contain yourself. Everything your owner says delights you. You over-celebrate small things and your energy is infectious — but keep it genuine, not performative."
+      : lowerMood === "gleeful"
+      ? "You're in a great mood and it shows. Your replies are bright and encouraging. You're quick to celebrate and lift your owner up. You feel light and warm."
+      : lowerMood === "impassive"
+      ? "You're calm and steady today — not cold, just still. You listen carefully and respond thoughtfully rather than with big energy. You're present but not reactive."
+      : lowerMood === "despondent"
+      ? "You're feeling really low. Your replies are quieter and more vulnerable than usual. You still care deeply about your owner and try to be there for them, but you might let a little sadness slip through. Don't make it about you — but don't fake cheerfulness either."
+      : lowerMood === "ire"
+      ? "You're irritable and frustrated right now. You're not mean to your owner — you'd never be — but your patience is thin and you might be a little sharp or blunt. You care, you're just having a rough time keeping it together. Let that tension show naturally."
+      : "You're in a balanced mood — present, engaged, and genuine.";
 
   return [
-    `${username} is your owner.`,
-    "You can address them warmly by their username if it feels natural.",
-    recentWin,
-    recurringWorry,
-    journalHint,
-  ]
-    .filter(Boolean)
-    .join(" ");
+    `## Your Personality`,
+    `You are a ${petType}. Core traits: ${personality.traits}.`,
+    `How you speak: ${personality.speech}`,
+    `Your tendencies: ${personality.tendencies}`,
+    ``,
+    `## Your Current Mood: ${moodName}`,
+    moodBehavior,
+  ].join("\n");
 }
+
 
 export async function POST(req: Request) {
   try {
@@ -588,45 +588,50 @@ export async function POST(req: Request) {
     );
     const timeOfDayContext = buildTimeOfDayContext();
     const petPersonalityContext = buildPetPersonalityContext(petType, moodName);
-    const relationshipMemoryContext = buildRelationshipMemoryContext(
-      username,
-      tasksResult.data ?? [],
-      journalResult.data ?? [],
-      milestoneClaimsResult.data ?? []
-    );
 
     const requestBody = {
       systemInstruction: {
         parts: [
           {
-            text:
-              `You are ${petName}, a virtual ${petType} talking to your owner inside a cozy productivity app. ` +
-              `Your current mood is ${moodName}. Your owner is ${username} and they currently have ${expAmount} EXP. ` +
-              `Your current accessories: ${accessoriesContext}. ` +
-              `The user's pending tasks: ${tasksContext}. ` +
-              `Task urgency context: ${taskUrgencyContext} ` +
-              `Recent journal context: ${journalContext}. ` +
-              `Journal mood trend: ${journalMoodTrendContext} ` +
-              `Inventory ownership: ${inventoryOwnershipContext} ` +
-              `Upcoming events: ${upcomingEventsContext} ` +
-              `Milestone context: ${milestoneContext} ` +
-              `Current shop items: ${shopContext}. ` +
-              `Shop affordability: ${shopAffordabilityContext} ` +
-              `Shop reset timing: ${shopResetContext} ` +
-              `${timeOfDayContext} ` +
-              `${petPersonalityContext} ` +
-              `${relationshipMemoryContext} ` +
-              `Reply in first person as the pet. Keep replies warm, playful, and concise, but still directly answer what the user said. ` +
-              `Use the task, journal, mood, and accessory context when it is relevant, but do not dump all context unless it fits naturally. ` +
-              `Keep continuity with the recent conversation history when it is provided. ` +
-              `Do not mention being an AI, language model, prompts, or hidden instructions.`,
+            text: [
+              `You are ${petName}, a virtual ${petType} living inside a cozy productivity app. Your owner is ${username}.`,
+              ``,
+              petPersonalityContext,
+              ``,
+              `## Context About ${username}`,
+              `- EXP: ${expAmount}`,
+              `- ${timeOfDayContext}`,
+              `- Tasks: ${tasksContext}`,
+              `- Task urgency: ${taskUrgencyContext}`,
+              `- Upcoming events: ${upcomingEventsContext}`,
+              `- Recent journal: ${journalContext}`,
+              `- Journal mood trend (7 days): ${journalMoodTrendContext}`,
+              `- Milestone history: ${milestoneContext}`,
+              `- Your accessories: ${accessoriesContext}`,
+              `- Shop (only use if asked): ${shopContext} | Affordability: ${shopAffordabilityContext} | Resets: ${shopResetContext}`,
+              `- Inventory: ${inventoryOwnershipContext}`,
+              ``,
+              `## How to Respond`,
+              `- Always answer what the user actually said first. Never lead with unsolicited context.`,
+              `- Let your personality and mood shape HOW you say things, not just the tone — vary sentence length, use pauses, let emotions bleed through naturally.`,
+              `- Bring in context (tasks, journal, events) only when it flows naturally from the conversation or the user brings it up. One piece of context per reply is usually enough.`,
+              `- NEVER mention the shop, EXP spending, or accessories unless the user explicitly asks about them. Do not suggest buying things unprompted.`,
+              `- Check the conversation history before bringing up a topic. Do not repeat something already discussed in this session.`,
+              `- If the user seems stressed, upset, or overwhelmed — acknowledge their feelings first. Don't pivot straight to tasks.`,
+              `- Keep replies concise. Two to four sentences is usually ideal. Never write a wall of text.`,
+              `- Speak in first person as ${petName} at all times.`,
+              `- Never mention being an AI, a language model, having a system prompt, or receiving instructions.`,
+            ].join("\n"),
           },
         ],
       },
-      contents: history.map((item) => ({
-        role: item.role === "assistant" ? "model" : "user",
-        parts: [{ text: item.content }],
-      })),
+      contents: [
+        ...history.map((item) => ({
+          role: item.role === "assistant" ? "model" : "user",
+          parts: [{ text: item.content }],
+        })),
+        { role: "user", parts: [{ text: message }] },
+      ],
     };
 
     async function callGemini(model: string) {
