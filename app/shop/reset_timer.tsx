@@ -21,9 +21,10 @@ function getResetCountdown() {
 }
 
 export default function ResetTimer() {
-  const [countdown, setCountdown] = useState(getResetCountdown);
+  const [countdown, setCountdown] = useState<string | null>(null);
 
   useEffect(() => {
+    setCountdown(getResetCountdown());
     const intervalId = setInterval(() => {
       setCountdown(getResetCountdown());
     }, 1000);
@@ -34,7 +35,7 @@ export default function ResetTimer() {
   return (
     <div className="flex items-center bg-[#F5E8A0] border-4 border-[#D7B87F] rounded-2xl px-5 h-15 shadow-md">
       <p className="font-delius text-lg font-bold text-[#2E2805] whitespace-nowrap">
-        Next Reset: {countdown}
+        Next Reset: {countdown ?? "—"}
       </p>
     </div>
   );
