@@ -110,7 +110,7 @@ export default async function Inventory() {
                 ${rarity[acc.accessory_rarity]?.bg} 
                   ${rarity[acc.accessory_rarity]?.text}`}
             >
-              <h1 className="font-black text-center h-10">
+              <h1 className="font-black text-center h-10 text-xs">
                 {acc.accessory_name}
               </h1>
 

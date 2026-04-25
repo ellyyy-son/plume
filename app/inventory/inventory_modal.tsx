@@ -82,7 +82,7 @@ export default function ModalWithTrigger({ acc }: { acc: Accessory }) {
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="px-4 py-2 hover:font-black -translate-y-5"
+        className="text-xs px-7 py-2 hover:font-black -translate-y-5"
       >
         Details
       </button>
