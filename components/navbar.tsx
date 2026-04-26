@@ -147,7 +147,7 @@ function FullNav() {
 
   return (
     <div className={`${isVisible ? "w-[250px]" : "w-auto"} fixed md:sticky left-0 top-0 h-screen overflow-y-auto z-50`}>
-      <div className="flex flex-col bg-[#F7F9FC] shadow-sm border-r-[3px] border-r-[#ADD3EA] h-full pt-2 pb-8 gap-5">
+      <div className="flex flex-col bg-[#F7F9FC] shadow-sm border-r-[3px] border-r-[#ADD3EA] pt-2 pb-8 gap-5">
         <div className={`flex ${isVisible ? "justify-end pr-2" : "justify-center"}`}>
           <button
             onClick={() => setIsVisible(!isVisible)}
