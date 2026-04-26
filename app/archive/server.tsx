@@ -1,11 +1,9 @@
 'use server'
 
 import { createClient } from "@/utils/supabase/server";
-import { cookies } from "next/headers";
 
 export async function getUserArticles() {
-  const cookieStore = cookies();
-  const supabase = await createClient(cookieStore);
+  const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
 

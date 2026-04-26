@@ -5,8 +5,8 @@ import { ImSad2, ImNeutral2 } from "react-icons/im";
 import { FaSmile, FaSmileBeam } from "react-icons/fa";
 
 export default function MoodSelector() {
-  const [selectedMood, setSelectedMood] = useState(null);
-  const [hoveredMood, setHoveredMood] = useState(null);
+  const [selectedMood, setSelectedMood] = useState<number | null>(null);
+  const [hoveredMood, setHoveredMood] = useState<number | null>(null);
 
   const moods = [
     { value: 5, icon: <FaFaceAngry size={40} />, color: "#FA5659", hover: "#ffb3ba" },

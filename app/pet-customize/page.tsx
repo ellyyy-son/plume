@@ -18,6 +18,7 @@ type CharacterResult =
           pet_model: string;
         } | null;
       };
+      petModelUrl: string;
       ownedAccessories: Array<{
         accessory_owned_id: string;
         accessory_id: string;
@@ -166,7 +167,7 @@ async function getPetCustomizationData(): Promise<CharacterResult> {
 
   return {
     kind: "ok",
-    pet: userPet as {
+    pet: userPet as unknown as {
       virtual_petid: number;
       pet_name: string;
       mood_id: number;

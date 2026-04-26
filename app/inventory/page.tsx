@@ -1,13 +1,11 @@
 import { createClient } from "@/utils/supabase/server";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Image from "next/image";
 import BodyBackground from "./body_background";
 import ModalWithTrigger from "./inventory_modal";
 
 export async function getUserAccessories() {
-  const cookieStore = cookies();
-  const supabase = await createClient(cookieStore);
+  const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -44,8 +42,7 @@ export async function getUserAccessories() {
 }
 
 export async function getUserExp() {
-  const cookieStore = cookies();
-  const supabase = await createClient(cookieStore);
+  const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;

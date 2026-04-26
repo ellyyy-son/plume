@@ -48,11 +48,6 @@ type CharacterResult =
   | { kind: "notSelected" }
   | { kind: "ready"; data: CharacterData };
 
-type CharacterResult =
-  | { kind: "notFound" }
-  | { kind: "notSelected" }
-  | { kind: "ready"; data: CharacterData };
-
 async function getCharacterSummary(): Promise<CharacterResult> {
   const supabase = await createClient();
 

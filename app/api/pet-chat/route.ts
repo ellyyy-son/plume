@@ -542,7 +542,9 @@ export async function POST(req: Request) {
       ]);
 
     const petType =
-      Array.isArray(userPet.pet) || !userPet.pet ? "pet" : userPet.pet.pet_type;
+      Array.isArray(userPet.pet) || !userPet.pet
+        ? "pet"
+        : (userPet.pet as { pet_type: string }).pet_type;
     const petName = userPet.pet_name?.trim() || "your pet";
     const moodName = moodResult.data?.mood_name ?? `Mood ${moodId}`;
     const username = profile.username?.trim() || "their owner";

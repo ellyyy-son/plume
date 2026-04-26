@@ -3,10 +3,10 @@ import { createClient } from "@/utils/supabase/client"
 import { useRouter } from "next/navigation"
 import { useState } from "react";
 
-export default function ResetShopButton({ userexp }: { userexp: number }) {
+export default function ResetShopButton({ userexp }: { userexp: number | null }) {
   const [isOpen, setIsOpen] = useState(false);
 
-  const canAfford = userexp >= 1000
+  const canAfford = (userexp ?? 0) >= 1000
   const supabase = createClient()
   const router = useRouter()
 

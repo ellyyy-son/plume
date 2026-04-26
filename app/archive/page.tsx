@@ -1,7 +1,6 @@
 import { startOfMonth, endOfMonth } from "date-fns"
 import { createClient } from '@/utils/supabase/server'
 import { getUserArticles } from "./server";
-import ArchiveFilter from "./archivefilter"
 import ArchiveList from "./archiveclient";
 import Image from "next/image";
 import Link from "next/link";
@@ -206,7 +205,7 @@ export default async function Archive({
     <div className="flex flex-col mx-16 mt-40">
       <div className='gap-8 bg-[#FBF5D1] p-10 rounded-b-lg rounded-e-lg border-4 border-[#CCC38D]'>
         <div className="bg-white border-2 border-[#CCC38D] rounded-lg shadow-md">
-          <ArchiveList entries={entries}/>
+          <ArchiveList entries={entries ?? []}/>
         </div>
       </div>
       <CharacterPanel getCharacter={character}/>

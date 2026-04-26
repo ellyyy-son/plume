@@ -101,7 +101,7 @@ function FullNav() {
 
     checkUser();
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
       const user = session?.user as ProfileLikeUser | null;
       if (!mounted) return;
       setIsUser(!!user);

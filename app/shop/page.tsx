@@ -1,7 +1,6 @@
 import { createClient } from "@/utils/supabase/server";
 import Image from "next/image";
 import Link from "next/link";
-import { cookies } from "next/headers";
 import BodyBackground from "./body_background";
 import ModalWithTrigger from "./shop_modal";
 import ResetTimer from "./reset_timer"
@@ -40,8 +39,7 @@ export async function getAccessories() {
 
   'use server'
 
-  const cookieStore = cookies();
-  const supabase = await createClient(cookieStore);
+  const supabase = await createClient();
 
   const { data: accessories, error } = await supabase
     .from("accessory")
@@ -57,8 +55,7 @@ export async function getAccessories() {
 
 export async function getDailyShop() {
   'use server'
-  const cookieStore = cookies();
-  const supabase = await createClient(cookieStore);
+  const supabase = await createClient();
   const { data: { user }, error: userError } = await supabase.auth.getUser()
   if (userError || !user) return
 
@@ -100,8 +97,7 @@ export async function getDailyShop() {
 
 export async function getShopAccessories(){
   'use server'
-  const cookieStore = cookies();
-  const supabase = await createClient(cookieStore);
+  const supabase = await createClient();
 
   const dailyShop = await getDailyShop() ?? [];
 
@@ -216,8 +212,7 @@ export async function getShopAccessories(){
 
 export async function getOwnedAccesoriesID(){
   'use server'
-  const cookieStore = cookies();
-  const supabase = await createClient(cookieStore);
+  const supabase = await createClient();
 
   const { data: { user }, error: userError } = await supabase.auth.getUser()
   if (userError || !user) return
@@ -369,7 +364,7 @@ async function CharacterPanel({
                               height={200}
                               className="absolute object-contain"
                               style={{
-                                 center: pos?.x ?? 0,
+                                 left: pos?.x ?? 0,
                                  bottom: pos?.y ?? 0,
                               }}
                             />
@@ -381,8 +376,7 @@ async function CharacterPanel({
 }
 
 export async function getUserExp() {
-  const cookieStore = cookies();
-  const supabase = await createClient(cookieStore);
+  const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;

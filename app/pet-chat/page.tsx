@@ -97,7 +97,9 @@ async function getPetChatData(): Promise<PageData> {
   ]);
 
   const pet =
-    Array.isArray(userPet.pet) || !userPet.pet ? null : userPet.pet;
+    Array.isArray(userPet.pet) || !userPet.pet
+      ? null
+      : (userPet.pet as { pet_type: string; pet_model: string });
 
   if (!pet) {
     return { kind: "notFound" };

@@ -1,7 +1,6 @@
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
-import { cookies } from "next/headers";
 
 type SlotName = "head" | "chest";
 
@@ -14,8 +13,7 @@ export async function equipAccessoryAction({
   accessoryOwnedId: string;
   slot: SlotName;
 }) {
-  const cookieStore = cookies();
-  const supabase = await createClient(cookieStore);
+  const supabase = await createClient();
 
   const {
     data: { user },
@@ -61,8 +59,7 @@ export async function unequipAccessoryAction({
   virtualPetId: number;
   slot: SlotName;
 }) {
-  const cookieStore = cookies();
-  const supabase = await createClient(cookieStore);
+  const supabase = await createClient();
 
   const {
     data: { user },

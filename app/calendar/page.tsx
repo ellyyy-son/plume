@@ -125,7 +125,7 @@ export default function KawaiiCalendar() {
             return;
         }
 
-        const loaded: Task[] = data.map(row => ({
+        const loaded: Task[] = data.map((row: any) => ({
             id: row.id.toString(),
             task_details: row.task_details,
             is_complete: row.is_complete,
@@ -155,7 +155,7 @@ export default function KawaiiCalendar() {
             return;
         }
 
-        const loaded: Event[] = data.map(row => ({
+        const loaded: Event[] = data.map((row: any) => ({
             id: row.event_id.toString(),
             name: row.event_name,
             date: parseLocalDate(row.event_date),

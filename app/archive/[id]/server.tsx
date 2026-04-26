@@ -1,13 +1,11 @@
 "use server"
 
 import { createClient } from "@/utils/supabase/server";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 
 export async function getEntry(id: string) {
-  const cookieStore = cookies();
-  const supabase = await createClient(cookieStore);
+  const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -47,8 +45,7 @@ export async function getEntry(id: string) {
 
 export async function deleteEntry(id: string) {
 
-  const cookieStore = cookies();
-  const supabase = await createClient(cookieStore);
+  const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
 

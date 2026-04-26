@@ -100,8 +100,7 @@ async function getCharacterSummary(): Promise<CharacterResult> {
       userName: profile.username,
       expAmount: profile.exp_amount ?? 0,
       petName: userPet.pet_name || "My Pet",
-      pet,
-      pet: pet ? { 
+      pet: pet ? {
          pet_type: pet.pet_type, 
          pet_model: petMood?.image_url ?? pet.pet_model  // fallback to base model
       } : null,

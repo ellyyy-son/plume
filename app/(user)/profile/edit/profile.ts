@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 
 export async function fetchUser() {
     const cookieStore = await cookies();
-    const supabase = await createClient(cookieStore);
+    const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
         console.log('No user logged in.');

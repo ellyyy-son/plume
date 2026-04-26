@@ -150,7 +150,7 @@ export default function PetChatClient({
         {
           id: crypto.randomUUID(),
           role: "pet",
-          text: payload.reply,
+          text: payload.reply ?? "",
         },
       ]);
     } catch (err) {

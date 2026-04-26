@@ -127,7 +127,7 @@ export default function UserDashboard() {
                     y: tasksOverTime.map((d) => d.completed),
                   },
                 ]}
-                layout={{ width: 350, height: 300, title: "Tasks Completed" }}
+                layout={{ width: 350, height: 300, title: { text: "Tasks Completed" } }}
               />
             </div>
           </div>
@@ -144,7 +144,7 @@ export default function UserDashboard() {
                   y: difficulty.map((d) => d.total),
                 },
               ]}
-              layout={{ width: 350, height: 300, title: "Tasks by Difficulty" }}
+              layout={{ width: 350, height: 300, title: { text: "Tasks by Difficulty" } }}
             />
             </div>
           </div>
@@ -164,7 +164,7 @@ export default function UserDashboard() {
                 y: mood.map((m) => m.value),
               },
             ]}
-            layout={{ width: 350, height: 300, title: "Mood Frequency" }}
+            layout={{ width: 350, height: 300, title: { text: "Mood Frequency" } }}
           />
           </div>
         </div>
@@ -181,7 +181,7 @@ export default function UserDashboard() {
                 y: journalFreq.map((j) => j.count),
               },
             ]}
-            layout={{ width: 350, height: 300, title: "Entries per Week" }}
+            layout={{ width: 350, height: 300, title: { text: "Entries per Week" } }}
           />
           </div>
         </div>
@@ -201,7 +201,7 @@ export default function UserDashboard() {
                   values: eventCats.map((e) => e.value),
                 },
               ]}
-              layout={{ width: 600, height: 400, title: "Events" }}
+              layout={{ width: 600, height: 400, title: { text: "Events" } }}
             />
             </div>
           </div>
